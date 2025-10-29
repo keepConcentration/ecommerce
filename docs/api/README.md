@@ -87,6 +87,138 @@ erDiagram
     }
 ```
 
+## 플로우차트
+
+### 1. 주문 생성 및 결제 플로우
+
+```mermaid
+flowchart TD
+    Start([주문 생성 요청]) --> GetCart[장바구니 조회]
+    GetCart --> CheckCartEmpty{장바구니<br/>비어있음?}
+    CheckCartEmpty -->|Yes| ErrorEmptyCart[에러: 장바구니가 비어있습니다]
+    CheckCartEmpty -->|No| CheckStock[모든 상품 재고 확인]
+
+    CheckStock --> StockSufficient{재고<br/>충분?}
+    StockSufficient -->|No| ErrorStock[에러: 재고 부족]
+    StockSufficient -->|Yes| DeductStock[재고 차감]
+
+    DeductStock --> CheckCoupon{쿠폰<br/>사용?}
+    CheckCoupon -->|No| CalcNoDiscount[할인 없이 금액 계산]
+    CheckCoupon -->|Yes| ValidateCoupon[쿠폰 유효성 검증]
+
+    ValidateCoupon --> CouponValid{쿠폰<br/>유효?}
+    CouponValid -->|No| ErrorCoupon[에러: 쿠폰 만료/사용됨]
+    CouponValid -->|Yes| ApplyCoupon[쿠폰 할인 적용]
+
+    ApplyCoupon --> CalcFinal[최종 금액 계산]
+    CalcNoDiscount --> CalcFinal
+
+    CalcFinal --> CheckPoint{포인트<br/>충분?}
+    CheckPoint -->|No| RollbackStock[재고 롤백]
+    RollbackStock --> ErrorPoint[에러: 포인트 부족]
+
+    CheckPoint -->|Yes| DeductPoint[포인트 차감]
+    DeductPoint --> CreateOrder[주문 생성]
+    CreateOrder --> MarkCouponUsed{쿠폰<br/>사용?}
+
+    MarkCouponUsed -->|Yes| UpdateCoupon[쿠폰 사용 처리]
+    MarkCouponUsed -->|No| ClearCart[장바구니 비우기]
+    UpdateCoupon --> ClearCart
+
+    ClearCart --> SendExternal[외부 시스템 데이터 전송]
+    SendExternal --> ExternalSuccess{전송<br/>성공?}
+    ExternalSuccess -->|No| LogFailure[전송 실패 로그 기록]
+    ExternalSuccess -->|Yes| Success
+    LogFailure --> Success[주문 성공 응답]
+
+    Success --> End([종료])
+    ErrorEmptyCart --> End
+    ErrorStock --> End
+    ErrorCoupon --> End
+    ErrorPoint --> End
+
+    style Start fill:#e1f5ff
+    style Success fill:#c8e6c9
+    style End fill:#e1f5ff
+    style ErrorEmptyCart fill:#ffcdd2
+    style ErrorStock fill:#ffcdd2
+    style ErrorCoupon fill:#ffcdd2
+    style ErrorPoint fill:#ffcdd2
+```
+
+### 2. 쿠폰 발급 플로우 (동시성 제어 없음)
+
+```mermaid
+flowchart TD
+    Start([쿠폰 발급 요청]) --> BeginTx[트랜잭션 시작]
+    BeginTx --> QueryCoupon[쿠폰 조회<br/>SELECT]
+
+    QueryCoupon --> CheckExists{쿠폰<br/>존재?}
+    CheckExists -->|No| ErrorNotFound[에러: 쿠폰을 찾을 수 없음]
+
+    CheckExists -->|Yes| CheckDuplicate[사용자 쿠폰 중복 확인]
+    CheckDuplicate --> IsDuplicate{이미<br/>발급받음?}
+    IsDuplicate -->|Yes| ErrorDuplicate[에러: 이미 발급받은 쿠폰]
+
+    IsDuplicate -->|No| CheckQuantity{남은 수량<br/>> 0?}
+    CheckQuantity -->|No| ErrorSoldOut[에러: 쿠폰 소진]
+
+    CheckQuantity -->|Yes| DecreaseQty[수량 감소<br/>total_quantity - 1<br/>⚠️ Race Condition 가능]
+    DecreaseQty --> CalcExpiry[만료일시 계산<br/>발급일 + 유효일수]
+
+    CalcExpiry --> CreateUserCoupon[사용자 쿠폰 생성]
+    CreateUserCoupon --> CommitTx[트랜잭션 커밋]
+
+    CommitTx --> Success[쿠폰 발급 성공]
+    Success --> End([종료])
+
+    ErrorNotFound --> RollbackTx[트랜잭션 롤백]
+    ErrorDuplicate --> RollbackTx
+    ErrorSoldOut --> RollbackTx
+    RollbackTx --> End
+
+    style Start fill:#e1f5ff
+    style Success fill:#c8e6c9
+    style End fill:#e1f5ff
+    style ErrorNotFound fill:#ffcdd2
+    style ErrorDuplicate fill:#ffcdd2
+    style ErrorSoldOut fill:#ffcdd2
+    style DecreaseQty fill:#ffe0b2
+    style BeginTx fill:#fff9c4
+    style CommitTx fill:#fff9c4
+```
+
+### 3. 장바구니 상품 추가 플로우
+
+```mermaid
+flowchart TD
+    Start([장바구니 추가 요청]) --> ValidateQty{수량<br/>> 0?}
+    ValidateQty -->|No| ErrorInvalidQty[에러: 유효하지 않은 수량]
+
+    ValidateQty -->|Yes| CheckProduct[상품 존재 확인]
+    CheckProduct --> ProductExists{상품<br/>존재?}
+    ProductExists -->|No| ErrorNotFound[에러: 상품을 찾을 수 없음]
+
+    ProductExists -->|Yes| CheckCartItem[장바구니에 동일 상품 확인]
+    CheckCartItem --> ItemExists{이미<br/>존재?}
+
+    ItemExists -->|Yes| UpdateQty[기존 수량에 더하기]
+    ItemExists -->|No| CreateItem[새 장바구니 아이템 생성]
+
+    UpdateQty --> Success[장바구니 추가 성공]
+    CreateItem --> Success
+    Success --> End([종료])
+
+    ErrorInvalidQty --> End
+    ErrorNotFound --> End
+
+    style Start fill:#e1f5ff
+    style Success fill:#c8e6c9
+    style End fill:#e1f5ff
+    style ErrorInvalidQty fill:#ffcdd2
+    style ErrorNotFound fill:#ffcdd2
+```
+
 ---
 
 ## 시퀀스 다이어그램
