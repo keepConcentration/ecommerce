@@ -1,6 +1,13 @@
 ## E-commerce ERD
 
-![ERD 이미지](erd.png)
+### Mock 서버 실행
+
+```shell
+docker run -p 8081:8080 -e SWAGGER_JSON=/api/openapi.yaml \
+    -v $(pwd)/docs/api:/api swaggerapi/swagger-ui
+```
+
+### ERD
 
 ```mermaid
 erDiagram
