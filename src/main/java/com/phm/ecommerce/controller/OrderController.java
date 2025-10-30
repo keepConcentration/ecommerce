@@ -3,6 +3,7 @@ package com.phm.ecommerce.controller;
 import com.phm.ecommerce.common.ApiResponse;
 import com.phm.ecommerce.controller.api.OrderApi;
 import com.phm.ecommerce.dto.request.CreateOrderRequest;
+import com.phm.ecommerce.dto.request.DirectOrderRequest;
 import com.phm.ecommerce.dto.response.OrderResponse;
 import com.phm.ecommerce.dto.response.OrderItemResponse;
 import org.springframework.http.HttpStatus;
@@ -43,6 +44,29 @@ public class OrderController implements OrderApi {
                 .userCouponId(11L)
                 .build());
     OrderResponse order = OrderResponse.builder().orderItems(orderItems).build();
+    return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(order));
+  }
+
+  @Override
+  public ResponseEntity<ApiResponse<OrderResponse>> createDirectOrder(DirectOrderRequest request) {
+    Long totalPrice = 1500000L * request.getQuantity();
+    Long discountAmount = request.getUserCouponId() != null ? 50000L : 0L;
+    Long finalAmount = totalPrice - discountAmount;
+
+    OrderItemResponse orderItem =
+        OrderItemResponse.builder()
+            .orderItemId(1L)
+            .productId(request.getProductId())
+            .productName("노트북")
+            .quantity(request.getQuantity())
+            .price(1500000L)
+            .totalPrice(totalPrice)
+            .discountAmount(discountAmount)
+            .finalAmount(finalAmount)
+            .userCouponId(request.getUserCouponId())
+            .build();
+
+    OrderResponse order = OrderResponse.builder().orderItems(List.of(orderItem)).build();
     return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(order));
   }
 }
