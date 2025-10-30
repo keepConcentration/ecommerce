@@ -543,6 +543,121 @@ Content-Type: application/json
 
 ---
 
+### 2. 직접 주문 생성 및 결제 (장바구니 없이)
+장바구니 없이 상품을 직접 주문하고 포인트로 결제를 처리합니다. (쿠폰 선택적 적용)
+
+**Endpoint**
+```
+POST /orders/direct
+```
+
+**Request Body**
+
+| Field        | Type | Required | Description    |
+|:-------------|:-----|:--------:|:---------------|
+| userId       | Long |   Yes    | 사용자 ID         |
+| productId    | Long |   Yes    | 상품 ID          |
+| quantity     | Long |   Yes    | 주문 수량 (1 이상)   |
+| userCouponId | Long |    No    | 사용할 쿠폰 ID (선택) |
+
+**Request**
+```http
+POST /api/v1/orders/direct
+Content-Type: application/json
+
+{
+  "userId": 1,
+  "productId": 1,
+  "quantity": 2,
+  "userCouponId": 10
+}
+```
+
+**Response** (201 Created)
+```json
+{
+  "status": true,
+  "data": {
+    "orderItems": [
+      {
+        "orderItemId": 1,
+        "productId": 1,
+        "productName": "노트북",
+        "quantity": 2,
+        "price": 1500000,
+        "totalPrice": 3000000,
+        "discountAmount": 50000,
+        "finalAmount": 2950000,
+        "userCouponId": 10
+      }
+    ]
+  },
+  "error": null
+}
+```
+
+**Response** (404 Not Found - 상품 없음)
+```json
+{
+  "status": false,
+  "data": null,
+  "error": {
+    "code": "PRODUCT_NOT_FOUND",
+    "message": "상품이 존재하지 않습니다"
+  }
+}
+```
+
+**Response** (409 Conflict - 재고 부족)
+```json
+{
+  "status": false,
+  "data": null,
+  "error": {
+    "code": "INSUFFICIENT_STOCK",
+    "message": "재고가 부족합니다"
+  }
+}
+```
+
+**Response** (409 Conflict - 포인트 부족)
+```json
+{
+  "status": false,
+  "data": null,
+  "error": {
+    "code": "INSUFFICIENT_POINTS",
+    "message": "포인트 잔액이 부족합니다"
+  }
+}
+```
+
+**Response** (400 Bad Request - 만료된 쿠폰)
+```json
+{
+  "status": false,
+  "data": null,
+  "error": {
+    "code": "COUPON_EXPIRED",
+    "message": "만료된 쿠폰입니다"
+  }
+}
+```
+
+**Response** (400 Bad Request - 이미 사용된 쿠폰)
+```json
+{
+  "status": false,
+  "data": null,
+  "error": {
+    "code": "COUPON_ALREADY_USED",
+    "message": "이미 사용된 쿠폰입니다"
+  }
+}
+```
+
+---
+
 ## 쿠폰 API
 
 ### 1. 쿠폰 발급
