@@ -1,11 +1,4 @@
-## E-commerce ERD
-
-### Mock 서버 실행
-
-```shell
-docker run -p 8081:8080 -e SWAGGER_JSON=/api/openapi.yaml \
-    -v $(pwd)/docs/api:/api swaggerapi/swagger-ui
-```
+## E-commerce
 
 ### ERD
 
