@@ -586,8 +586,7 @@ Content-Type: application/json
     "couponName": "신규 가입 50000원 할인",
     "discountAmount": 50000,
     "issuedAt": "2025-01-20T10:00:00",
-    "expiredAt": "2025-01-27T23:59:59",
-    "validDays": 7
+    "expiredAt": "2025-01-27T23:59:59"
   },
   "error": null
 }
