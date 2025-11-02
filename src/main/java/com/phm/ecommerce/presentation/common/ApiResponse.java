@@ -1,4 +1,4 @@
-package com.phm.ecommerce.common;
+package com.phm.ecommerce.presentation.common;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -28,5 +28,9 @@ public class ApiResponse<T> {
 
   public static <T> ApiResponse<T> error(String code, String message) {
     return new ApiResponse<>(false, null, new ErrorDetail(code, message));
+  }
+
+  public static <T> ApiResponse<T> error(ErrorDetail errorDetail) {
+    return new ApiResponse<>(false, null, errorDetail);
   }
 }

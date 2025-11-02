@@ -1,15 +1,13 @@
-package com.phm.ecommerce.dto.response;
+package com.phm.ecommerce.presentation.dto.response;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
 @Getter
-@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Schema(description = "사용자 쿠폰 정보")
