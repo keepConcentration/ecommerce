@@ -14,16 +14,20 @@ public class CartItem extends BaseEntity {
     super();
   }
 
-  public CartItem(Long id, Long userId, Long productId, Long quantity) {
+  private CartItem(Long id, Long userId, Long productId, Long quantity) {
     super(id);
+    validateQuantity(quantity);
     this.userId = userId;
     this.productId = productId;
     this.quantity = quantity;
   }
 
   public static CartItem create(Long userId, Long productId, Long quantity) {
-    validateQuantity(quantity);
     return new CartItem(null, userId, productId, quantity);
+  }
+
+  public static CartItem reconstruct(Long id, Long userId, Long productId, Long quantity) {
+    return new CartItem(id, userId, productId, quantity);
   }
 
   public void updateQuantity(Long newQuantity) {
@@ -32,9 +36,9 @@ public class CartItem extends BaseEntity {
     updateTimestamp();
   }
 
-  public void increaseQuantity(Long amount) {
-    validateQuantity(amount);
-    this.quantity += amount;
+  public void increaseQuantity(Long quantity) {
+    validateQuantity(quantity);
+    this.quantity += quantity;
     updateTimestamp();
   }
 

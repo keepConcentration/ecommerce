@@ -19,8 +19,7 @@ public class InMemoryCartItemRepository implements CartItemRepository {
   @Override
   public CartItem save(CartItem cartItem) {
     if (cartItem.getId() == null) {
-      CartItem newCartItem =
-          new CartItem(
+      CartItem newCartItem = CartItem.reconstruct(
               idGenerator.getAndIncrement(),
               cartItem.getUserId(),
               cartItem.getProductId(),
