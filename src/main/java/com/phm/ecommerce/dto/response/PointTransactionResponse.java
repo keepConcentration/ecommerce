@@ -21,6 +21,9 @@ public class PointTransactionResponse {
   @Schema(description = "포인트 ID", example = "1")
   private Long pointId;
 
+  @Schema(description = "주문 ID (주문 결제인 경우)", example = "1", nullable = true)
+  private Long orderId;
+
   @Schema(description = "거래 금액 (음수: 사용, 양수: 충전)", example = "-2980000")
   private Long amount;
 

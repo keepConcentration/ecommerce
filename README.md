@@ -7,7 +7,7 @@ erDiagram
     USERS ||--o{ CART_ITEMS : ""
     USERS ||--o{ USER_COUPONS : ""
     USERS ||--|| POINTS : ""
-    USERS ||--o{ ORDER_ITEMS : ""
+    USERS ||--o{ ORDERS : ""
     USERS {
         bigint user_id PK
         datetime created_at
@@ -24,9 +24,20 @@ erDiagram
 
     POINTS ||--o{ POINT_TRANSACTIONS : ""
     POINT_TRANSACTIONS {
-        bigint point_transaction_id
-        bigint point_id "INDEX"
+        bigint point_transaction_id PK
+        bigint point_id FK "INDEX"
+        bigint order_id FK "nullable, INDEX"
         bigint amount
+        datetime created_at
+    }
+
+    ORDERS ||--o{ POINT_TRANSACTIONS : ""
+    ORDERS {
+        bigint order_id PK
+        bigint user_id FK
+        bigint total_amount
+        bigint discount_amount
+        bigint final_amount
         datetime created_at
     }
 
@@ -37,21 +48,22 @@ erDiagram
         varchar name
         bigint price
         bigint quantity
+        bigint view_count
         datetime created_at
         datetime updated_at
     }
 
-    ORDER_ITEMS ||--o| CART_ITEMS : ""
+    ORDERS ||--o{ ORDER_ITEMS : ""
     ORDER_ITEMS ||--o| USER_COUPONS : ""
     ORDER_ITEMS {
         bigint order_item_id PK
+        bigint order_id FK
         bigint user_id FK
         bigint product_id FK
-        bigint cart_item_id FK
-        bigint user_coupon_id FK
-        bigint point_transaction_id FK
+        bigint user_coupon_id FK "nullable"
         varchar product_name
         bigint quantity
+        bigint price
         bigint total_price
         bigint discount_amount
         bigint final_amount
@@ -323,22 +335,30 @@ sequenceDiagram
     PointRepo-->>Service: void
     deactivate PointRepo
 
-    Service->>PointRepo: createTransaction(pointId, -amount)
+    Note over Service: 6. 주문 생성
+    Service->>OrderRepo: createOrder(order)
+    activate OrderRepo
+    OrderRepo->>DB: INSERT INTO orders<br/>(user_id, total_amount,<br/>discount_amount, final_amount,<br/>created_at)
+    DB-->>OrderRepo: order
+    OrderRepo-->>Service: Order
+    deactivate OrderRepo
+
+    Service->>PointRepo: createTransaction(pointId, orderId, -amount)
     activate PointRepo
-    PointRepo->>DB: INSERT INTO point_transactions<br/>(point_id, amount, created_at)
+    PointRepo->>DB: INSERT INTO point_transactions<br/>(point_id, order_id, amount, created_at)
     DB-->>PointRepo: success
     PointRepo-->>Service: PointTransaction
     deactivate PointRepo
 
-    Note over Service: 6. 주문 생성
-    Service->>OrderRepo: createOrderItems(orderItems)
+    Note over Service: 7. 주문 아이템 생성
+    Service->>OrderRepo: createOrderItems(orderId, orderItems)
     activate OrderRepo
-    OrderRepo->>DB: INSERT INTO order_items<br/>(user_id, product_id, ...)
+    OrderRepo->>DB: INSERT INTO order_items<br/>(order_id, user_id, product_id, ...)
     DB-->>OrderRepo: order_items
     OrderRepo-->>Service: List<OrderItem>
     deactivate OrderRepo
 
-    Note over Service: 7. 쿠폰 사용 처리
+    Note over Service: 8. 쿠폰 사용 처리
     opt 쿠폰 사용
         loop 각 쿠폰
             Service->>CouponRepo: markAsUsed(userCouponId)
@@ -350,7 +370,7 @@ sequenceDiagram
         end
     end
 
-    Note over Service: 8. 장바구니 비우기
+    Note over Service: 9. 장바구니 비우기
     Service->>CartRepo: deleteByUserId(userId)
     activate CartRepo
     CartRepo->>DB: DELETE FROM cart_items<br/>WHERE user_id = ?
@@ -364,7 +384,7 @@ sequenceDiagram
     Controller-->>Client: 201 Created<br/>{orderItems, totalAmount, ...}
     deactivate Controller
 
-    Note over Service,ExternalAPI: 9. 외부 시스템 전송 (비동기)<br/>주문 성공과 무관하게 별도 처리
+    Note over Service,ExternalAPI: 10. 외부 시스템 전송 (비동기)<br/>주문 성공과 무관하게 별도 처리
     Service--)ExternalAPI: sendOrderData(orderData)
     Note right of ExternalAPI: 비동기 전송<br/>성공/실패 여부와<br/>무관하게 주문 완료
 ```
@@ -554,22 +574,30 @@ sequenceDiagram
     PointRepo-->>Service: void
     deactivate PointRepo
 
-    Service->>PointRepo: createTransaction(pointId, -finalAmount)
+    Note over Service: 7. 주문 생성
+    Service->>OrderRepo: createOrder(order)
+    activate OrderRepo
+    OrderRepo->>DB: INSERT INTO orders<br/>(user_id, total_amount,<br/>discount_amount, final_amount,<br/>created_at)
+    DB-->>OrderRepo: order
+    OrderRepo-->>Service: Order
+    deactivate OrderRepo
+
+    Service->>PointRepo: createTransaction(pointId, orderId, -finalAmount)
     activate PointRepo
-    PointRepo->>DB: INSERT INTO point_transactions<br/>(point_id, amount, created_at)
+    PointRepo->>DB: INSERT INTO point_transactions<br/>(point_id, order_id, amount, created_at)
     DB-->>PointRepo: success
     PointRepo-->>Service: PointTransaction
     deactivate PointRepo
 
-    Note over Service: 7. 주문 생성
-    Service->>OrderRepo: createOrderItem(orderItem)
+    Note over Service: 8. 주문 아이템 생성
+    Service->>OrderRepo: createOrderItem(orderId, orderItem)
     activate OrderRepo
-    OrderRepo->>DB: INSERT INTO order_items<br/>(user_id, product_id, quantity,<br/>total_price, discount_amount,<br/>final_amount, point_transaction_id, ...)
+    OrderRepo->>DB: INSERT INTO order_items<br/>(order_id, user_id, product_id,<br/>quantity, price, total_price,<br/>discount_amount, final_amount, ...)
     DB-->>OrderRepo: order_item
     OrderRepo-->>Service: OrderItem
     deactivate OrderRepo
 
-    Note over Service: 8. 쿠폰 사용 처리
+    Note over Service: 9. 쿠폰 사용 처리
     opt 쿠폰 사용
         Service->>CouponRepo: markAsUsed(userCouponId)
         activate CouponRepo
@@ -585,7 +613,7 @@ sequenceDiagram
     Controller-->>Client: 201 Created<br/>{orderItem, totalAmount, finalAmount, ...}
     deactivate Controller
 
-    Note over Service,ExternalAPI: 9. 외부 시스템 전송 (비동기)<br/>주문 성공과 무관하게 별도 처리
+    Note over Service,ExternalAPI: 10. 외부 시스템 전송 (비동기)<br/>주문 성공과 무관하게 별도 처리
     Service--)ExternalAPI: sendOrderData(orderData)
     Note right of ExternalAPI: 비동기 전송<br/>성공/실패 여부와<br/>무관하게 주문 완료
 ```

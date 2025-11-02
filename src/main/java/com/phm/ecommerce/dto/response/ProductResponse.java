@@ -27,6 +27,9 @@ public class ProductResponse {
   @Schema(description = "재고 수량", example = "50")
   private Long quantity;
 
+  @Schema(description = "조회수", example = "1523")
+  private Long viewCount;
+
   @Schema(description = "생성일시", example = "2025-01-15T10:00:00")
   private LocalDateTime createdAt;
 

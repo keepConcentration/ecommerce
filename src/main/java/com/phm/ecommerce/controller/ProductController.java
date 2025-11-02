@@ -23,6 +23,7 @@ public class ProductController implements ProductApi {
                 .name("노트북")
                 .price(1500000L)
                 .quantity(50L)
+                .viewCount(1523L)
                 .createdAt(LocalDateTime.of(2025, 1, 15, 10, 0))
                 .updatedAt(LocalDateTime.of(2025, 1, 20, 15, 30))
                 .build(),
@@ -31,6 +32,7 @@ public class ProductController implements ProductApi {
                 .name("마우스")
                 .price(35000L)
                 .quantity(0L)
+                .viewCount(842L)
                 .createdAt(LocalDateTime.of(2025, 1, 15, 10, 0))
                 .updatedAt(LocalDateTime.of(2025, 1, 20, 15, 30))
                 .build());
@@ -45,6 +47,7 @@ public class ProductController implements ProductApi {
             .name("노트북")
             .price(1500000L)
             .quantity(50L)
+            .viewCount(1523L)
             .createdAt(LocalDateTime.of(2025, 1, 15, 10, 0))
             .updatedAt(LocalDateTime.of(2025, 1, 20, 15, 30))
             .build();
@@ -68,5 +71,39 @@ public class ProductController implements ProductApi {
                 .totalSales(98L)
                 .build());
     return ApiResponse.success(popularProducts);
+  }
+
+  @Override
+  public ApiResponse<List<ProductResponse>> getMostViewedProducts() {
+    List<ProductResponse> mostViewedProducts =
+        List.of(
+            ProductResponse.builder()
+                .productId(1L)
+                .name("노트북")
+                .price(1500000L)
+                .quantity(50L)
+                .viewCount(15230L)
+                .createdAt(LocalDateTime.of(2025, 1, 15, 10, 0))
+                .updatedAt(LocalDateTime.of(2025, 1, 20, 15, 30))
+                .build(),
+            ProductResponse.builder()
+                .productId(5L)
+                .name("모니터")
+                .price(450000L)
+                .quantity(30L)
+                .viewCount(12850L)
+                .createdAt(LocalDateTime.of(2025, 1, 15, 10, 0))
+                .updatedAt(LocalDateTime.of(2025, 1, 20, 15, 30))
+                .build(),
+            ProductResponse.builder()
+                .productId(3L)
+                .name("키보드")
+                .price(120000L)
+                .quantity(100L)
+                .viewCount(9870L)
+                .createdAt(LocalDateTime.of(2025, 1, 15, 10, 0))
+                .updatedAt(LocalDateTime.of(2025, 1, 20, 15, 30))
+                .build());
+    return ApiResponse.success(mostViewedProducts);
   }
 }

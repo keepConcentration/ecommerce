@@ -29,7 +29,7 @@ public interface ProductApi {
   ApiResponse<List<ProductResponse>> getProducts();
 
   @GetMapping("/{productId}")
-  @Operation(summary = "상품 상세 조회", description = "특정 상품의 상세 정보를 조회합니다.")
+  @Operation(summary = "상품 상세 조회", description = "특정 상품의 상세 정보를 조회합니다. 조회 시 해당 상품의 조회수가 1 증가합니다.")
   @ApiResponses(
       value = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
@@ -55,4 +55,15 @@ public interface ProductApi {
             content = @Content(schema = @Schema(implementation = ApiResponse.class)))
       })
   ApiResponse<List<PopularProductResponse>> getPopularProducts();
+
+  @GetMapping("/most-viewed")
+  @Operation(summary = "조회수 기반 인기 상품 조회", description = "조회수 기준 상위 10개 상품을 조회합니다.")
+  @ApiResponses(
+      value = {
+        @io.swagger.v3.oas.annotations.responses.ApiResponse(
+            responseCode = "200",
+            description = "성공",
+            content = @Content(schema = @Schema(implementation = ApiResponse.class)))
+      })
+  ApiResponse<List<ProductResponse>> getMostViewedProducts();
 }

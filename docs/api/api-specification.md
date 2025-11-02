@@ -82,6 +82,7 @@ GET /api/v1/products
       "name": "노트북",
       "price": 1500000,
       "quantity": 50,
+      "viewCount": 1523,
       "createdAt": "2025-01-15T10:00:00",
       "updatedAt": "2025-01-20T15:30:00"
     },
@@ -90,6 +91,7 @@ GET /api/v1/products
       "name": "마우스",
       "price": 35000,
       "quantity": 0,
+      "viewCount": 842,
       "createdAt": "2025-01-15T10:00:00",
       "updatedAt": "2025-01-20T15:30:00"
     }
@@ -101,7 +103,7 @@ GET /api/v1/products
 ---
 
 ### 2. 상품 상세 조회
-특정 상품의 상세 정보를 조회합니다.
+특정 상품의 상세 정보를 조회합니다. 조회 시 해당 상품의 조회수가 1 증가합니다.
 
 **Endpoint**
 ```
@@ -129,6 +131,7 @@ GET /api/v1/products/1
     "name": "노트북",
     "price": 1500000,
     "quantity": 50,
+    "viewCount": 1523,
     "createdAt": "2025-01-15T10:00:00",
     "updatedAt": "2025-01-20T15:30:00"
   },
@@ -150,7 +153,7 @@ GET /api/v1/products/1
 
 ---
 
-### 3. 인기 상품 조회 (Top 5)
+### 3. 판매량 기반 인기 상품 조회 (Top 5)
 최근 3일간 판매량 기준 상위 5개 상품을 조회합니다.
 
 **Endpoint**
@@ -185,6 +188,58 @@ GET /api/v1/products/popular
       "name": "마우스",
       "price": 35000,
       "totalSales": 75
+    }
+  ],
+  "error": null
+}
+```
+
+---
+
+### 4. 조회수 기반 인기 상품 조회 (Top 10)
+조회수 기준 상위 10개 상품을 조회합니다.
+
+**Endpoint**
+```
+GET /products/most-viewed
+```
+
+**Request**
+```http
+GET /api/v1/products/most-viewed
+```
+
+**Response** (200 OK)
+```json
+{
+  "status": true,
+  "data": [
+    {
+      "productId": 1,
+      "name": "노트북",
+      "price": 1500000,
+      "quantity": 50,
+      "viewCount": 15230,
+      "createdAt": "2025-01-15T10:00:00",
+      "updatedAt": "2025-01-20T15:30:00"
+    },
+    {
+      "productId": 5,
+      "name": "모니터",
+      "price": 450000,
+      "quantity": 30,
+      "viewCount": 12850,
+      "createdAt": "2025-01-15T10:00:00",
+      "updatedAt": "2025-01-20T15:30:00"
+    },
+    {
+      "productId": 3,
+      "name": "키보드",
+      "price": 120000,
+      "quantity": 100,
+      "viewCount": 9870,
+      "createdAt": "2025-01-15T10:00:00",
+      "updatedAt": "2025-01-20T15:30:00"
     }
   ],
   "error": null
@@ -464,6 +519,12 @@ Content-Type: application/json
 {
   "status": true,
   "data": {
+    "orderId": 1,
+    "userId": 1,
+    "totalAmount": 3035000,
+    "discountAmount": 55000,
+    "finalAmount": 2980000,
+    "createdAt": "2025-01-20T15:30:00",
     "orderItems": [
       {
         "orderItemId": 1,
@@ -578,6 +639,12 @@ Content-Type: application/json
 {
   "status": true,
   "data": {
+    "orderId": 1,
+    "userId": 1,
+    "totalAmount": 3000000,
+    "discountAmount": 50000,
+    "finalAmount": 2950000,
+    "createdAt": "2025-01-20T15:30:00",
     "orderItems": [
       {
         "orderItemId": 1,
@@ -900,18 +967,21 @@ GET /api/v1/transactions?userId={userId}
     {
       "pointTransactionId": 125,
       "pointId": 1,
+      "orderId": 1,
       "amount": -2980000,
       "createdAt": "2025-01-20T15:30:00"
     },
     {
       "pointTransactionId": 124,
       "pointId": 1,
+      "orderId": null,
       "amount": 100000,
       "createdAt": "2025-01-20T15:00:00"
     },
     {
       "pointTransactionId": 123,
       "pointId": 1,
+      "orderId": null,
       "amount": 50000,
       "createdAt": "2025-01-20T10:00:00"
     }
