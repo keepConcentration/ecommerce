@@ -26,18 +26,18 @@ public class OrderController implements OrderApi {
     Long discountAmount = 55000L;
     Long finalAmount = totalPrice - discountAmount;
 
-    OrderResponse order = new OrderResponse(1L, request.getUserId(), totalPrice, discountAmount, finalAmount, LocalDateTime.of(2025, 11, 1, 10, 30), orderItems);
+    OrderResponse order = new OrderResponse(1L, request.userId(), totalPrice, discountAmount, finalAmount, LocalDateTime.of(2025, 11, 1, 10, 30), orderItems);
     return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(order));
   }
 
   @Override
   public ResponseEntity<ApiResponse<OrderResponse>> createDirectOrder(DirectOrderRequest request) {
-    Long totalPrice = 1500000L * request.getQuantity();
-    Long discountAmount = request.getUserCouponId() != null ? 50000L : 0L;
+    Long totalPrice = 1500000L * request.quantity();
+    Long discountAmount = request.userCouponId() != null ? 50000L : 0L;
     Long finalAmount = totalPrice - discountAmount;
 
-    OrderItemResponse orderItem = new OrderItemResponse(1L, request.getProductId(), "노트북", request.getQuantity(), 1500000L, totalPrice, discountAmount, finalAmount, request.getUserCouponId());
-    OrderResponse order = new OrderResponse(1L, request.getUserId(), totalPrice, discountAmount, finalAmount, LocalDateTime.of(2025, 11, 1, 10, 30), List.of(orderItem));
+    OrderItemResponse orderItem = new OrderItemResponse(1L, request.productId(), "노트북", request.quantity(), 1500000L, totalPrice, discountAmount, finalAmount, request.userCouponId());
+    OrderResponse order = new OrderResponse(1L, request.userId(), totalPrice, discountAmount, finalAmount, LocalDateTime.of(2025, 11, 1, 10, 30), List.of(orderItem));
     return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(order));
   }
 }

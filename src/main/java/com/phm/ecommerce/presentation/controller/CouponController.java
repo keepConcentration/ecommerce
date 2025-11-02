@@ -19,7 +19,7 @@ public class CouponController implements CouponApi {
       Long couponId, IssueCouponRequest request) {
     UserCouponResponse userCoupon = new UserCouponResponse(
         10L,
-        request.getUserId(),
+        request.userId(),
         couponId,
         "신규 가입 50000원 할인",
         50000L,

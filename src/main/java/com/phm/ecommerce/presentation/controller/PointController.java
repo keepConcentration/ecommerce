@@ -22,7 +22,7 @@ public class PointController implements PointApi {
 
   @Override
   public ApiResponse<ChargedPointResponse> chargePoints(ChargePointsRequest request) {
-    ChargedPointResponse chargedPoint = new ChargedPointResponse(1L, request.getUserId(), 150000L, request.getAmount(), 123L, LocalDateTime.of(2025, 1, 20, 15, 0));
+    ChargedPointResponse chargedPoint = new ChargedPointResponse(1L, request.userId(), 150000L, request.amount(), 123L, LocalDateTime.of(2025, 1, 20, 15, 0));
     return ApiResponse.success(chargedPoint);
   }
 

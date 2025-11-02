@@ -17,7 +17,7 @@ public class CartController implements CartApi {
 
   @Override
   public ResponseEntity<ApiResponse<CartItemResponse>> addCartItem(AddCartItemRequest request) {
-    CartItemResponse cartItem = new CartItemResponse(1L, request.getProductId(), "노트북", 1500000L, request.getQuantity());
+    CartItemResponse cartItem = new CartItemResponse(1L, request.productId(), "노트북", 1500000L, request.quantity());
     return ResponseEntity.status(HttpStatus.CREATED)
         .header("Location", "/api/v1/cart/items/1")
         .body(ApiResponse.success(cartItem));
@@ -36,7 +36,7 @@ public class CartController implements CartApi {
   @Override
   public ApiResponse<CartItemResponse> updateCartItemQuantity(
       Long cartItemId, UpdateQuantityRequest request) {
-    CartItemResponse cartItem = new CartItemResponse(cartItemId, 1L, "노트북", 1500000L, request.getQuantity());
+    CartItemResponse cartItem = new CartItemResponse(cartItemId, 1L, "노트북", 1500000L, request.quantity());
     return ApiResponse.success(cartItem);
   }
 

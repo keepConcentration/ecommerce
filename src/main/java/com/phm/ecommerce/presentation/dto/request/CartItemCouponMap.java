@@ -1,22 +1,18 @@
 package com.phm.ecommerce.presentation.dto.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.media.Schema.RequiredMode;
 import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
 
-@Getter
-@NoArgsConstructor
-@AllArgsConstructor
 @Schema(description = "장바구니 아이템-쿠폰 매핑")
-public class CartItemCouponMap {
+public record CartItemCouponMap(
 
-  @NotNull(message = "장바구니 아이템 ID는 필수입니다")
-  @Schema(description = "장바구니 아이템 ID", example = "1", requiredMode = Schema.RequiredMode.REQUIRED)
-  private Long cartItemId;
+    @Schema(description = "장바구니 아이템 ID", example = "1", requiredMode = RequiredMode.REQUIRED)
+    @NotNull(message = "장바구니 아이템 ID는 필수입니다")
+    Long cartItemId,
 
-  @NotNull(message = "사용자 쿠폰 ID는 필수입니다")
-  @Schema(description = "사용할 쿠폰 ID", example = "10", requiredMode = Schema.RequiredMode.REQUIRED)
-  private Long userCouponId;
+    @Schema(description = "사용할 쿠폰 ID", example = "10", requiredMode = RequiredMode.REQUIRED)
+    @NotNull(message = "사용자 쿠폰 ID는 필수입니다")
+    Long userCouponId) {
+
 }
