@@ -1,9 +1,9 @@
-package com.phm.ecommerce.controller.api;
+package com.phm.ecommerce.presentation.controller.api;
 
-import com.phm.ecommerce.common.ApiResponse;
-import com.phm.ecommerce.dto.request.CreateOrderRequest;
-import com.phm.ecommerce.dto.request.DirectOrderRequest;
-import com.phm.ecommerce.dto.response.OrderResponse;
+import com.phm.ecommerce.presentation.common.ApiResponse;
+import com.phm.ecommerce.presentation.dto.request.CreateOrderRequest;
+import com.phm.ecommerce.presentation.dto.request.DirectOrderRequest;
+import com.phm.ecommerce.presentation.dto.response.OrderResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -13,8 +13,10 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 
 @Tag(name = "Orders", description = "주문 및 결제 API")
+@RequestMapping("/api/v1/orders")
 public interface OrderApi {
 
   @PostMapping

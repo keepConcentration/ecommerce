@@ -1,10 +1,10 @@
-package com.phm.ecommerce.controller.api;
+package com.phm.ecommerce.presentation.controller.api;
 
-import com.phm.ecommerce.common.ApiResponse;
-import com.phm.ecommerce.dto.request.AddCartItemRequest;
-import com.phm.ecommerce.dto.request.UpdateQuantityRequest;
-import com.phm.ecommerce.dto.response.CartResponse;
-import com.phm.ecommerce.dto.response.CartItemResponse;
+import com.phm.ecommerce.presentation.common.ApiResponse;
+import com.phm.ecommerce.presentation.dto.request.AddCartItemRequest;
+import com.phm.ecommerce.presentation.dto.request.UpdateQuantityRequest;
+import com.phm.ecommerce.presentation.dto.response.CartItemResponse;
+import com.phm.ecommerce.presentation.dto.response.CartResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -16,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "Cart", description = "장바구니 관리 API")
+@RequestMapping("/api/v1/cart")
 public interface CartApi {
 
   @PutMapping("/items")

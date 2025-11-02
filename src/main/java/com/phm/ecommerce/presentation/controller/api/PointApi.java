@@ -1,10 +1,10 @@
-package com.phm.ecommerce.controller.api;
+package com.phm.ecommerce.presentation.controller.api;
 
-import com.phm.ecommerce.common.ApiResponse;
-import com.phm.ecommerce.dto.request.ChargePointsRequest;
-import com.phm.ecommerce.dto.response.ChargedPointResponse;
-import com.phm.ecommerce.dto.response.PointResponse;
-import com.phm.ecommerce.dto.response.PointTransactionResponse;
+import com.phm.ecommerce.presentation.common.ApiResponse;
+import com.phm.ecommerce.presentation.dto.request.ChargePointsRequest;
+import com.phm.ecommerce.presentation.dto.response.ChargedPointResponse;
+import com.phm.ecommerce.presentation.dto.response.PointResponse;
+import com.phm.ecommerce.presentation.dto.response.PointTransactionResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @Tag(name = "Points", description = "포인트 관리 API")
+@RequestMapping("/api/v1")
 public interface PointApi {
 
   @GetMapping("/points")

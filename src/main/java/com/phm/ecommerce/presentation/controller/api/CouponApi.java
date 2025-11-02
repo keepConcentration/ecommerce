@@ -1,8 +1,8 @@
-package com.phm.ecommerce.controller.api;
+package com.phm.ecommerce.presentation.controller.api;
 
-import com.phm.ecommerce.common.ApiResponse;
-import com.phm.ecommerce.dto.request.IssueCouponRequest;
-import com.phm.ecommerce.dto.response.UserCouponResponse;
+import com.phm.ecommerce.presentation.common.ApiResponse;
+import com.phm.ecommerce.presentation.dto.request.IssueCouponRequest;
+import com.phm.ecommerce.presentation.dto.response.UserCouponResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @Tag(name = "Coupons", description = "쿠폰 발급 및 조회 API")
+@RequestMapping("/api/v1/coupons")
 public interface CouponApi {
 
   @PostMapping("/{couponId}/issue")

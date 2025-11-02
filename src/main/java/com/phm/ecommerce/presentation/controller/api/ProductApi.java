@@ -1,8 +1,8 @@
-package com.phm.ecommerce.controller.api;
+package com.phm.ecommerce.presentation.controller.api;
 
-import com.phm.ecommerce.common.ApiResponse;
-import com.phm.ecommerce.dto.response.PopularProductResponse;
-import com.phm.ecommerce.dto.response.ProductResponse;
+import com.phm.ecommerce.presentation.common.ApiResponse;
+import com.phm.ecommerce.presentation.dto.response.PopularProductResponse;
+import com.phm.ecommerce.presentation.dto.response.ProductResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -13,8 +13,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.List;
+import org.springframework.web.bind.annotation.RequestMapping;
 
 @Tag(name = "Products", description = "상품 관리 API")
+@RequestMapping("/api/v1/products")
 public interface ProductApi {
 
   @GetMapping
