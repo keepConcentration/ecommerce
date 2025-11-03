@@ -1,5 +1,6 @@
 package com.phm.ecommerce.presentation.controller;
 
+import com.phm.ecommerce.application.usecase.point.ChargePointsUseCase;
 import com.phm.ecommerce.application.usecase.point.GetPointsUseCase;
 import com.phm.ecommerce.presentation.common.ApiResponse;
 import com.phm.ecommerce.presentation.controller.api.PointApi;
@@ -18,6 +19,7 @@ import java.util.List;
 public class PointController implements PointApi {
 
   private final GetPointsUseCase getPointsUseCase;
+  private final ChargePointsUseCase chargePointsUseCase;
 
   @Override
   public ApiResponse<PointResponse> getPoints(Long userId) {
@@ -27,7 +29,7 @@ public class PointController implements PointApi {
 
   @Override
   public ApiResponse<ChargedPointResponse> chargePoints(ChargePointsRequest request) {
-    ChargedPointResponse chargedPoint = new ChargedPointResponse(1L, request.userId(), 150000L, request.amount(), 123L, LocalDateTime.of(2025, 1, 20, 15, 0));
+    ChargedPointResponse chargedPoint = chargePointsUseCase.execute(request);
     return ApiResponse.success(chargedPoint);
   }
 
