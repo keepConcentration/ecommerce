@@ -24,19 +24,28 @@ public class PointController implements PointApi {
 
   @Override
   public ApiResponse<PointResponse> getPoints(Long userId) {
-    PointResponse point = getPointsUseCase.execute(userId);
+    GetPointsUseCase.Output output = getPointsUseCase.execute(new GetPointsUseCase.Input(userId));
+    PointResponse point = new PointResponse(output.pointId(), output.userId(), output.amount(), output.updatedAt());
     return ApiResponse.success(point);
   }
 
   @Override
   public ApiResponse<ChargedPointResponse> chargePoints(ChargePointsRequest request) {
-    ChargedPointResponse chargedPoint = chargePointsUseCase.execute(request);
+    ChargePointsUseCase.Output output = chargePointsUseCase.execute(
+        new ChargePointsUseCase.Input(request.userId(), request.amount()));
+    ChargedPointResponse chargedPoint = new ChargedPointResponse(output.pointId(), output.userId(),
+        output.amount(), output.chargedAmount(), output.transactionId(), output.createdAt());
     return ApiResponse.success(chargedPoint);
   }
 
   @Override
   public ApiResponse<List<PointTransactionResponse>> getPointTransactions(Long userId) {
-    List<PointTransactionResponse> transactions = getPointTransactionsUseCase.execute(userId);
+    List<GetPointTransactionsUseCase.Output> outputs = getPointTransactionsUseCase.execute(
+        new GetPointTransactionsUseCase.Input(userId));
+    List<PointTransactionResponse> transactions = outputs.stream()
+        .map(output -> new PointTransactionResponse(output.transactionId(), output.pointId(),
+            output.orderId(), output.amount(), output.createdAt()))
+        .toList();
     return ApiResponse.success(transactions);
   }
 }
