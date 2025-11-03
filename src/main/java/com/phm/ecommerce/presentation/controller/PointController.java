@@ -2,6 +2,7 @@ package com.phm.ecommerce.presentation.controller;
 
 import com.phm.ecommerce.application.usecase.point.ChargePointsUseCase;
 import com.phm.ecommerce.application.usecase.point.GetPointsUseCase;
+import com.phm.ecommerce.application.usecase.point.GetPointTransactionsUseCase;
 import com.phm.ecommerce.presentation.common.ApiResponse;
 import com.phm.ecommerce.presentation.controller.api.PointApi;
 import com.phm.ecommerce.presentation.dto.request.ChargePointsRequest;
@@ -11,7 +12,6 @@ import com.phm.ecommerce.presentation.dto.response.PointTransactionResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -20,6 +20,7 @@ public class PointController implements PointApi {
 
   private final GetPointsUseCase getPointsUseCase;
   private final ChargePointsUseCase chargePointsUseCase;
+  private final GetPointTransactionsUseCase getPointTransactionsUseCase;
 
   @Override
   public ApiResponse<PointResponse> getPoints(Long userId) {
@@ -35,10 +36,7 @@ public class PointController implements PointApi {
 
   @Override
   public ApiResponse<List<PointTransactionResponse>> getPointTransactions(Long userId) {
-    List<PointTransactionResponse> transactions =
-        List.of(
-            new PointTransactionResponse(125L, 1L, 1L, -2980000L, LocalDateTime.of(2025, 1, 20, 15, 30)),
-            new PointTransactionResponse(124L, 1L, null, 100000L, LocalDateTime.of(2025, 1, 20, 15, 0)));
+    List<PointTransactionResponse> transactions = getPointTransactionsUseCase.execute(userId);
     return ApiResponse.success(transactions);
   }
 }
