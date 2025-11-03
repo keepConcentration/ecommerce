@@ -4,7 +4,9 @@ import com.phm.ecommerce.domain.coupon.Coupon;
 import com.phm.ecommerce.persistence.repository.CouponRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
@@ -36,6 +38,14 @@ public class InMemoryCouponRepository implements CouponRepository {
   @Override
   public Optional<Coupon> findById(Long id) {
     return Optional.ofNullable(store.get(id));
+  }
+
+  @Override
+  public List<Coupon> findAllByIds(List<Long> ids) {
+    return ids.stream()
+        .map(store::get)
+        .filter(Objects::nonNull)
+        .toList();
   }
 
   @Override

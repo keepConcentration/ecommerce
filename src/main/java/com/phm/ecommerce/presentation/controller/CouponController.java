@@ -1,5 +1,6 @@
 package com.phm.ecommerce.presentation.controller;
 
+import com.phm.ecommerce.application.usecase.coupon.GetUserCouponsUseCase;
 import com.phm.ecommerce.application.usecase.coupon.IssueCouponUseCase;
 import com.phm.ecommerce.presentation.common.ApiResponse;
 import com.phm.ecommerce.presentation.controller.api.CouponApi;
@@ -10,7 +11,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -18,6 +18,7 @@ import java.util.List;
 public class CouponController implements CouponApi {
 
   private final IssueCouponUseCase issueCouponUseCase;
+  private final GetUserCouponsUseCase getUserCouponsUseCase;
 
   @Override
   public ResponseEntity<ApiResponse<UserCouponResponse>> issueCoupon(
@@ -28,24 +29,7 @@ public class CouponController implements CouponApi {
 
   @Override
   public ApiResponse<List<UserCouponResponse>> getUserCoupons(Long userId) {
-    List<UserCouponResponse> coupons =
-        List.of(
-            new UserCouponResponse(
-                11L,
-                userId,
-                2L,
-                "10000원 할인",
-                10000L,
-                LocalDateTime.of(2025, 1, 18, 10, 0),
-                LocalDateTime.of(2025, 1, 21, 23, 59, 59)),
-            new UserCouponResponse(
-                10L,
-                userId,
-                1L,
-                "50000원 할인",
-                10000L,
-                LocalDateTime.of(2025, 1, 15, 10, 0),
-                LocalDateTime.of(2025, 1, 22, 23, 59, 59)));
+    List<UserCouponResponse> coupons = getUserCouponsUseCase.execute(userId);
     return ApiResponse.success(coupons);
   }
 }
