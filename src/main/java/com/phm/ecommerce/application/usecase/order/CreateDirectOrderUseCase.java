@@ -20,9 +20,6 @@ import com.phm.ecommerce.persistence.repository.PointRepository;
 import com.phm.ecommerce.persistence.repository.PointTransactionRepository;
 import com.phm.ecommerce.persistence.repository.ProductRepository;
 import com.phm.ecommerce.persistence.repository.UserCouponRepository;
-import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -41,22 +38,10 @@ public class CreateDirectOrderUseCase {
   private final OrderRepository orderRepository;
   private final OrderItemRepository orderItemRepository;
 
-  @Schema(description = "직접 주문 생성 요청")
   public record Input(
-      @Schema(description = "사용자 ID", example = "1", requiredMode = Schema.RequiredMode.REQUIRED)
-      @NotNull(message = "사용자 ID는 필수입니다")
       Long userId,
-
-      @Schema(description = "상품 ID", example = "1", requiredMode = Schema.RequiredMode.REQUIRED)
-      @NotNull(message = "상품 ID는 필수입니다")
       Long productId,
-
-      @Schema(description = "주문 수량", example = "2", requiredMode = Schema.RequiredMode.REQUIRED)
-      @NotNull(message = "수량은 필수입니다")
-      @Min(value = 1, message = "수량은 1개 이상이어야 합니다")
       Long quantity,
-
-      @Schema(description = "사용할 쿠폰 ID (선택)", example = "10")
       Long userCouponId) {}
 
   // TODO 기능 분리
@@ -202,55 +187,23 @@ public class CreateDirectOrderUseCase {
     }
   }
 
-  @Schema(description = "주문 정보")
   public record Output(
-      @Schema(description = "주문 ID", example = "1")
       Long orderId,
-
-      @Schema(description = "사용자 ID", example = "1")
       Long userId,
-
-      @Schema(description = "전체 주문 금액", example = "3035000")
       Long totalAmount,
-
-      @Schema(description = "전체 할인 금액", example = "55000")
       Long discountAmount,
-
-      @Schema(description = "최종 결제 금액", example = "2980000")
       Long finalAmount,
-
-      @Schema(description = "주문 생성일시", example = "2025-01-20T15:30:00")
       LocalDateTime createdAt,
-
-      @Schema(description = "주문 아이템 목록")
       List<OrderItemInfo> orderItems) {}
 
-  @Schema(description = "주문 아이템 정보")
   public record OrderItemInfo(
-      @Schema(description = "주문 아이템 ID", example = "1")
       Long orderItemId,
-
-      @Schema(description = "상품 ID", example = "1")
       Long productId,
-
-      @Schema(description = "상품명", example = "노트북")
       String productName,
-
-      @Schema(description = "수량", example = "2")
       Long quantity,
-
-      @Schema(description = "단가", example = "1500000")
       Long price,
-
-      @Schema(description = "총 가격", example = "3000000")
       Long totalPrice,
-
-      @Schema(description = "할인 금액", example = "50000")
       Long discountAmount,
-
-      @Schema(description = "최종 금액", example = "2950000")
       Long finalAmount,
-
-      @Schema(description = "사용한 쿠폰 ID", example = "10")
       Long userCouponId) {}
 }
