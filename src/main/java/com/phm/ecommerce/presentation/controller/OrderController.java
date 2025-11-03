@@ -1,5 +1,6 @@
 package com.phm.ecommerce.presentation.controller;
 
+import com.phm.ecommerce.application.usecase.order.CreateDirectOrderUseCase;
 import com.phm.ecommerce.presentation.common.ApiResponse;
 import com.phm.ecommerce.presentation.controller.api.OrderApi;
 import com.phm.ecommerce.presentation.dto.request.CreateOrderRequest;
@@ -7,6 +8,7 @@ import com.phm.ecommerce.presentation.dto.request.DirectOrderRequest;
 import com.phm.ecommerce.presentation.dto.response.OrderItemResponse;
 import com.phm.ecommerce.presentation.dto.response.OrderResponse;
 import java.time.LocalDateTime;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
@@ -14,7 +16,10 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
+@RequiredArgsConstructor
 public class OrderController implements OrderApi {
+
+  private final CreateDirectOrderUseCase createDirectOrderUseCase;
 
   @Override
   public ResponseEntity<ApiResponse<OrderResponse>> createOrder(CreateOrderRequest request) {
@@ -32,12 +37,7 @@ public class OrderController implements OrderApi {
 
   @Override
   public ResponseEntity<ApiResponse<OrderResponse>> createDirectOrder(DirectOrderRequest request) {
-    Long totalPrice = 1500000L * request.quantity();
-    Long discountAmount = request.userCouponId() != null ? 50000L : 0L;
-    Long finalAmount = totalPrice - discountAmount;
-
-    OrderItemResponse orderItem = new OrderItemResponse(1L, request.productId(), "노트북", request.quantity(), 1500000L, totalPrice, discountAmount, finalAmount, request.userCouponId());
-    OrderResponse order = new OrderResponse(1L, request.userId(), totalPrice, discountAmount, finalAmount, LocalDateTime.of(2025, 11, 1, 10, 30), List.of(orderItem));
+    OrderResponse order = createDirectOrderUseCase.execute(request);
     return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(order));
   }
 }
