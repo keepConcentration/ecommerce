@@ -59,4 +59,9 @@ public class UserCoupon extends BaseEntity {
     this.usedAt = LocalDateTime.now();
     updateTimestamp();
   }
+
+  public void rollbackUsage() {
+    this.usedAt = null;
+    updateTimestamp();
+  }
 }
