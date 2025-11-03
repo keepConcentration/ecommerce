@@ -23,13 +23,21 @@ public class CouponController implements CouponApi {
   @Override
   public ResponseEntity<ApiResponse<UserCouponResponse>> issueCoupon(
       Long couponId, IssueCouponRequest request) {
-    UserCouponResponse userCoupon = issueCouponUseCase.execute(couponId, request);
+    IssueCouponUseCase.Output output = issueCouponUseCase.execute(
+        new IssueCouponUseCase.Input(couponId, request.userId()));
+    UserCouponResponse userCoupon = new UserCouponResponse(output.userCouponId(), output.userId(),
+        output.couponId(), output.couponName(), output.discountAmount(), output.issuedAt(), output.expiredAt());
     return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(userCoupon));
   }
 
   @Override
   public ApiResponse<List<UserCouponResponse>> getUserCoupons(Long userId) {
-    List<UserCouponResponse> coupons = getUserCouponsUseCase.execute(userId);
+    List<GetUserCouponsUseCase.Output> outputs = getUserCouponsUseCase.execute(
+        new GetUserCouponsUseCase.Input(userId));
+    List<UserCouponResponse> coupons = outputs.stream()
+        .map(output -> new UserCouponResponse(output.userCouponId(), output.userId(), output.couponId(),
+            output.couponName(), output.discountAmount(), output.issuedAt(), output.expiredAt()))
+        .toList();
     return ApiResponse.success(coupons);
   }
 }
