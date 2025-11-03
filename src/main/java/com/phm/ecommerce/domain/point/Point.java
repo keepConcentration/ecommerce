@@ -11,10 +11,9 @@ public class Point extends BaseEntity {
 
   protected Point() {
     super();
-    this.amount = 0L;
   }
 
-  public Point(Long id, Long userId, Long amount) {
+  private Point(Long id, Long userId, Long amount) {
     super(id);
     this.userId = userId;
     this.amount = amount != null ? amount : 0L;
@@ -22,6 +21,10 @@ public class Point extends BaseEntity {
 
   public static Point create(Long userId) {
     return new Point(null, userId, 0L);
+  }
+
+  public static Point reconstruct(Long id, Long userId, Long amount) {
+    return new Point(id, userId, amount);
   }
 
   public void charge(Long amount) {

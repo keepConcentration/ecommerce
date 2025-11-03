@@ -18,7 +18,7 @@ public class InMemoryPointRepository implements PointRepository {
   @Override
   public Point save(Point point) {
     if (point.getId() == null) {
-      Point newPoint = new Point(idGenerator.getAndIncrement(), point.getUserId(), point.getAmount());
+      Point newPoint = Point.reconstruct(idGenerator.getAndIncrement(), point.getUserId(), point.getAmount());
       store.put(newPoint.getId(), newPoint);
       return newPoint;
     }
