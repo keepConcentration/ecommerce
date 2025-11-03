@@ -10,12 +10,11 @@ import com.phm.ecommerce.presentation.dto.request.AddCartItemRequest;
 import com.phm.ecommerce.presentation.dto.request.UpdateQuantityRequest;
 import com.phm.ecommerce.presentation.dto.response.CartItemResponse;
 import com.phm.ecommerce.presentation.dto.response.CartResponse;
+import com.phm.ecommerce.presentation.mapper.CartMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -25,16 +24,12 @@ public class CartController implements CartApi {
   private final GetCartItemsUseCase getCartItemsUseCase;
   private final UpdateCartItemQuantityUseCase updateCartItemQuantityUseCase;
   private final DeleteCartItemUseCase deleteCartItemUseCase;
+  private final CartMapper cartMapper;
 
   @Override
   public ResponseEntity<ApiResponse<CartItemResponse>> addCartItem(AddCartItemRequest request) {
-    AddCartItemUseCase.Input input = new AddCartItemUseCase.Input(
-        request.userId(), request.productId(), request.quantity());
-    AddCartItemUseCase.Output output = addCartItemUseCase.execute(input);
-
-    CartItemResponse response = new CartItemResponse(
-        output.cartItemId(), output.productId(), output.productName(),
-        output.price(), output.quantity());
+    AddCartItemUseCase.Output output = addCartItemUseCase.execute(cartMapper.toInput(request));
+    CartItemResponse response = cartMapper.toResponse(output);
 
     return ResponseEntity.status(HttpStatus.CREATED)
         .header("Location", "/api/v1/cart/items/" + output.cartItemId())
@@ -43,34 +38,21 @@ public class CartController implements CartApi {
 
   @Override
   public ApiResponse<CartResponse> getCartItems(Long userId) {
-    GetCartItemsUseCase.Output output = getCartItemsUseCase.execute(
-        new GetCartItemsUseCase.Input(userId));
-
-    List<CartItemResponse> items = output.items().stream()
-        .map(item -> new CartItemResponse(item.cartItemId(), item.productId(),
-            item.productName(), item.price(), item.quantity()))
-        .toList();
-
-    CartResponse response = new CartResponse(items);
-    return ApiResponse.success(response);
+    GetCartItemsUseCase.Output output = getCartItemsUseCase.execute(cartMapper.toInput(userId));
+    return ApiResponse.success(cartMapper.toResponse(output));
   }
 
   @Override
   public ApiResponse<CartItemResponse> updateCartItemQuantity(
       Long cartItemId, UpdateQuantityRequest request) {
     UpdateCartItemQuantityUseCase.Output output = updateCartItemQuantityUseCase.execute(
-        new UpdateCartItemQuantityUseCase.Input(cartItemId, request.quantity()));
-
-    CartItemResponse response = new CartItemResponse(
-        output.cartItemId(), output.productId(), output.productName(),
-        output.price(), output.quantity());
-
-    return ApiResponse.success(response);
+        cartMapper.toInput(cartItemId, request));
+    return ApiResponse.success(cartMapper.toResponse(output));
   }
 
   @Override
   public ResponseEntity<Void> deleteCartItem(Long cartItemId) {
-    deleteCartItemUseCase.execute(new DeleteCartItemUseCase.Input(cartItemId));
+    deleteCartItemUseCase.execute(cartMapper.toDeleteInput(cartItemId));
     return ResponseEntity.noContent().build();
   }
 }
