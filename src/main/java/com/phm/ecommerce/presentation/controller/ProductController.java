@@ -1,5 +1,6 @@
 package com.phm.ecommerce.presentation.controller;
 
+import com.phm.ecommerce.application.usecase.product.GetProductByIdUseCase;
 import com.phm.ecommerce.application.usecase.product.GetProductsUseCase;
 import com.phm.ecommerce.presentation.common.ApiResponse;
 import com.phm.ecommerce.presentation.controller.api.ProductApi;
@@ -16,6 +17,7 @@ import java.util.List;
 public class ProductController implements ProductApi {
 
   private final GetProductsUseCase getProductsUseCase;
+  private final GetProductByIdUseCase getProductByIdUseCase;
 
   @Override
   public ApiResponse<List<ProductResponse>> getProducts() {
@@ -25,7 +27,7 @@ public class ProductController implements ProductApi {
 
   @Override
   public ApiResponse<ProductResponse> getProductById(Long productId) {
-    ProductResponse product = new ProductResponse(productId, "노트북", 1500000L, 50L, 1523L, LocalDateTime.of(2025, 1, 15, 10, 0), LocalDateTime.of(2025, 1, 20, 15, 30));
+    ProductResponse product = getProductByIdUseCase.execute(productId);
     return ApiResponse.success(product);
   }
 
