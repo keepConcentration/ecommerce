@@ -5,8 +5,10 @@ import com.phm.ecommerce.domain.product.Product;
 import com.phm.ecommerce.domain.product.exception.ProductNotFoundException;
 import com.phm.ecommerce.persistence.repository.CartItemRepository;
 import com.phm.ecommerce.persistence.repository.ProductRepository;
-import com.phm.ecommerce.presentation.dto.request.AddCartItemRequest;
-import com.phm.ecommerce.presentation.dto.response.CartItemResponse;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.media.Schema.RequiredMode;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -19,23 +21,38 @@ public class AddCartItemUseCase {
   private final CartItemRepository cartItemRepository;
   private final ProductRepository productRepository;
 
-  public CartItemResponse execute(AddCartItemRequest request) {
-    Product product = productRepository.findById(request.productId())
+  @Schema(description = "장바구니 상품 추가 요청")
+  public record Input(
+      @Schema(description = "사용자 ID", example = "1", requiredMode = RequiredMode.REQUIRED)
+      @NotNull(message = "사용자 ID는 필수입니다")
+      Long userId,
+
+      @Schema(description = "상품 ID", example = "1", requiredMode = RequiredMode.REQUIRED)
+      @NotNull(message = "상품 ID는 필수입니다")
+      Long productId,
+
+      @Schema(description = "수량 (1 이상)", example = "3", requiredMode = RequiredMode.REQUIRED)
+      @NotNull(message = "수량은 필수입니다")
+      @Min(value = 1, message = "수량은 1 이상이어야 합니다")
+      Long quantity) {}
+
+  public Output execute(Input input) {
+    Product product = productRepository.findById(input.productId())
         .orElseThrow(ProductNotFoundException::new);
 
     Optional<CartItem> existingCartItem = cartItemRepository.findByUserIdAndProductId(
-        request.userId(), request.productId());
+        input.userId(), input.productId());
 
     CartItem cartItem;
     if (existingCartItem.isPresent()) {
       cartItem = existingCartItem.get();
-      cartItem.increaseQuantity(request.quantity());
+      cartItem.increaseQuantity(input.quantity());
     } else {
-      cartItem = CartItem.create(request.userId(), request.productId(), request.quantity());
+      cartItem = CartItem.create(input.userId(), input.productId(), input.quantity());
     }
     cartItem = cartItemRepository.save(cartItem);
 
-    return new CartItemResponse(
+    return new Output(
         cartItem.getId(),
         product.getId(),
         product.getName(),
@@ -43,4 +60,21 @@ public class AddCartItemUseCase {
         cartItem.getQuantity()
     );
   }
+
+  @Schema(description = "장바구니 아이템 정보")
+  public record Output(
+      @Schema(description = "장바구니 아이템 ID", example = "1")
+      Long cartItemId,
+
+      @Schema(description = "상품 ID", example = "1")
+      Long productId,
+
+      @Schema(description = "상품명", example = "노트북")
+      String productName,
+
+      @Schema(description = "가격", example = "1500000")
+      Long price,
+
+      @Schema(description = "수량", example = "3")
+      Long quantity) {}
 }
