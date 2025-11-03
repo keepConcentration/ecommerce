@@ -21,13 +21,19 @@ public class ProductController implements ProductApi {
 
   @Override
   public ApiResponse<List<ProductResponse>> getProducts() {
-    List<ProductResponse> products = getProductsUseCase.execute();
+    List<GetProductsUseCase.Output> outputs = getProductsUseCase.execute();
+    List<ProductResponse> products = outputs.stream()
+        .map(output -> new ProductResponse(output.productId(), output.name(), output.price(),
+            output.quantity(), output.viewCount(), output.createdAt(), output.updatedAt()))
+        .toList();
     return ApiResponse.success(products);
   }
 
   @Override
   public ApiResponse<ProductResponse> getProductById(Long productId) {
-    ProductResponse product = getProductByIdUseCase.execute(productId);
+    GetProductByIdUseCase.Output output = getProductByIdUseCase.execute(new GetProductByIdUseCase.Input(productId));
+    ProductResponse product = new ProductResponse(output.productId(), output.name(), output.price(),
+        output.quantity(), output.viewCount(), output.createdAt(), output.updatedAt());
     return ApiResponse.success(product);
   }
 
