@@ -13,6 +13,8 @@ public interface ProductRepository {
 
   List<Product> findAll();
 
+  List<Product> findAllByIds(List<Long> ids);
+
   List<Product> findTopByViewCount(int limit);
 
   void deleteById(Long id);

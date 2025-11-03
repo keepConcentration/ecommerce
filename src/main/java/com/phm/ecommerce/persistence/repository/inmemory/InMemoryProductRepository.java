@@ -4,10 +4,7 @@ import com.phm.ecommerce.domain.product.Product;
 import com.phm.ecommerce.persistence.repository.ProductRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -42,6 +39,14 @@ public class InMemoryProductRepository implements ProductRepository {
   @Override
   public List<Product> findAll() {
     return List.copyOf(store.values());
+  }
+
+  @Override
+  public List<Product> findAllByIds(List<Long> ids) {
+    return ids.stream()
+        .map(store::get)
+        .filter(Objects::nonNull)
+        .toList();
   }
 
   @Override
