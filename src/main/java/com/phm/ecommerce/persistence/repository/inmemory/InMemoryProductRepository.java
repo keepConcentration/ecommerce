@@ -17,8 +17,7 @@ public class InMemoryProductRepository implements ProductRepository {
   @Override
   public Product save(Product product) {
     if (product.getId() == null) {
-      Product newProduct =
-          new Product(
+      Product newProduct = Product.reconstruct(
               idGenerator.getAndIncrement(),
               product.getName(),
               product.getPrice(),

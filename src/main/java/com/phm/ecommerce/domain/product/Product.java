@@ -13,10 +13,9 @@ public class Product extends BaseEntity {
 
   protected Product() {
     super();
-    this.viewCount = 0L;
   }
 
-  public Product(Long id, String name, Long price, Long quantity, Long viewCount) {
+  private Product(Long id, String name, Long price, Long quantity, Long viewCount) {
     super(id);
     this.name = name;
     this.price = price;
@@ -26,6 +25,10 @@ public class Product extends BaseEntity {
 
   public static Product create(String name, Long price, Long quantity) {
     return new Product(null, name, price, quantity, 0L);
+  }
+
+  public static Product reconstruct(Long id, String name, Long price, Long quantity, Long viewCount) {
+    return new Product(id, name, price, quantity, viewCount);
   }
 
   public void increaseViewCount() {
