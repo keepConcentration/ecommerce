@@ -24,7 +24,6 @@ public class GetCartItemsUseCase {
   public CartResponse execute(Long userId) {
     List<CartItem> cartItems = cartItemRepository.findByUserId(userId);
 
-    // Bulk query to avoid N+1 problem
     List<Long> productIds = cartItems.stream()
         .map(CartItem::getProductId)
         .toList();
