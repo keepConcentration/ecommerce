@@ -1,23 +1,25 @@
 package com.phm.ecommerce.presentation.controller;
 
+import com.phm.ecommerce.application.usecase.product.GetProductsUseCase;
 import com.phm.ecommerce.presentation.common.ApiResponse;
 import com.phm.ecommerce.presentation.controller.api.ProductApi;
 import com.phm.ecommerce.presentation.dto.response.PopularProductResponse;
 import com.phm.ecommerce.presentation.dto.response.ProductResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
+@RequiredArgsConstructor
 public class ProductController implements ProductApi {
+
+  private final GetProductsUseCase getProductsUseCase;
 
   @Override
   public ApiResponse<List<ProductResponse>> getProducts() {
-    List<ProductResponse> products =
-        List.of(
-            new ProductResponse(1L, "노트북", 1500000L, 50L, 1523L, LocalDateTime.of(2025, 1, 15, 10, 0), LocalDateTime.of(2025, 1, 20, 15, 30)),
-            new ProductResponse(2L, "마우스", 35000L, 0L, 842L, LocalDateTime.of(2025, 1, 15, 10, 0), LocalDateTime.of(2025, 1, 20, 15, 30)));
+    List<ProductResponse> products = getProductsUseCase.execute();
     return ApiResponse.success(products);
   }
 
