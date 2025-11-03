@@ -4,7 +4,6 @@ import com.phm.ecommerce.domain.coupon.Coupon;
 import com.phm.ecommerce.domain.coupon.UserCoupon;
 import com.phm.ecommerce.domain.coupon.exception.CouponAlreadyUsedException;
 import com.phm.ecommerce.domain.coupon.exception.CouponExpiredException;
-import com.phm.ecommerce.domain.coupon.exception.CouponNotFoundException;
 import com.phm.ecommerce.domain.order.Order;
 import com.phm.ecommerce.domain.order.OrderItem;
 import com.phm.ecommerce.domain.point.Point;
@@ -12,7 +11,6 @@ import com.phm.ecommerce.domain.point.PointTransaction;
 import com.phm.ecommerce.domain.point.exception.InsufficientPointsException;
 import com.phm.ecommerce.domain.product.Product;
 import com.phm.ecommerce.domain.product.exception.InsufficientStockException;
-import com.phm.ecommerce.domain.product.exception.ProductNotFoundException;
 import com.phm.ecommerce.persistence.repository.CouponRepository;
 import com.phm.ecommerce.persistence.repository.OrderItemRepository;
 import com.phm.ecommerce.persistence.repository.OrderRepository;
@@ -47,8 +45,7 @@ public class CreateDirectOrderUseCase {
   // TODO 기능 분리
   public Output execute(Input request) {
     // 1. Product 검증 및 재고 확인
-    Product product = productRepository.findById(request.productId())
-        .orElseThrow(ProductNotFoundException::new);
+    Product product = productRepository.findByIdOrThrow(request.productId());
 
     if (!product.hasEnoughStock(request.quantity())) {
       throw new InsufficientStockException();
@@ -67,8 +64,7 @@ public class CreateDirectOrderUseCase {
 
       // 3. 쿠폰 검증 및 할인 금액 계산
       if (request.userCouponId() != null) {
-        userCoupon = userCouponRepository.findById(request.userCouponId())
-            .orElseThrow(CouponNotFoundException::new);
+        userCoupon = userCouponRepository.findByIdOrThrow(request.userCouponId());
 
         if (userCoupon.isUsed()) {
           throw new CouponAlreadyUsedException();
@@ -78,8 +74,7 @@ public class CreateDirectOrderUseCase {
           throw new CouponExpiredException();
         }
 
-        Coupon coupon = couponRepository.findById(userCoupon.getCouponId())
-            .orElseThrow(CouponNotFoundException::new);
+        Coupon coupon = couponRepository.findByIdOrThrow(userCoupon.getCouponId());
 
         discountAmount = coupon.getDiscountAmount();
       }
@@ -89,8 +84,7 @@ public class CreateDirectOrderUseCase {
       finalAmount = totalAmount - discountAmount;
 
       // 5. Point 검증 및 차감
-      Point point = pointRepository.findByUserId(request.userId())
-          .orElseThrow(InsufficientPointsException::new);
+      Point point = pointRepository.findByUserIdOrThrow(request.userId());
 
       if (!point.hasEnough(finalAmount)) {
         throw new InsufficientPointsException();

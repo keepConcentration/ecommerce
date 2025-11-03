@@ -1,7 +1,6 @@
 package com.phm.ecommerce.application.usecase.product;
 
 import com.phm.ecommerce.domain.product.Product;
-import com.phm.ecommerce.domain.product.exception.ProductNotFoundException;
 import com.phm.ecommerce.persistence.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -17,8 +16,7 @@ public class GetProductByIdUseCase {
   public record Input(Long productId) {}
 
   public Output execute(Input input) {
-    Product product = productRepository.findById(input.productId())
-        .orElseThrow(ProductNotFoundException::new);
+    Product product = productRepository.findByIdOrThrow(input.productId());
 
     product.increaseViewCount();
     product = productRepository.save(product);

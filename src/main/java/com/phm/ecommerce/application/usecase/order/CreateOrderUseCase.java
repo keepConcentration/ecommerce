@@ -5,7 +5,6 @@ import com.phm.ecommerce.domain.coupon.Coupon;
 import com.phm.ecommerce.domain.coupon.UserCoupon;
 import com.phm.ecommerce.domain.coupon.exception.CouponAlreadyUsedException;
 import com.phm.ecommerce.domain.coupon.exception.CouponExpiredException;
-import com.phm.ecommerce.domain.coupon.exception.CouponNotFoundException;
 import com.phm.ecommerce.domain.order.Order;
 import com.phm.ecommerce.domain.order.OrderItem;
 import com.phm.ecommerce.domain.point.Point;
@@ -13,7 +12,6 @@ import com.phm.ecommerce.domain.point.PointTransaction;
 import com.phm.ecommerce.domain.point.exception.InsufficientPointsException;
 import com.phm.ecommerce.domain.product.Product;
 import com.phm.ecommerce.domain.product.exception.InsufficientStockException;
-import com.phm.ecommerce.domain.product.exception.ProductNotFoundException;
 import com.phm.ecommerce.persistence.repository.CartItemRepository;
 import com.phm.ecommerce.persistence.repository.CouponRepository;
 import com.phm.ecommerce.persistence.repository.OrderItemRepository;
@@ -56,11 +54,7 @@ public class CreateOrderUseCase {
     // 1. 주문할 장바구니 아이템 조회
     List<CartItem> cartItems = new ArrayList<>();
     for (CartItemCouponInfo map : request.cartItemCouponMaps()) {
-      CartItem cartItem =
-          cartItemRepository
-              .findById(map.cartItemId())
-              .orElseThrow(
-                  () -> new IllegalArgumentException("장바구니 아이템을 찾을 수 없습니다: " + map.cartItemId()));
+      CartItem cartItem = cartItemRepository.findByIdOrThrow(map.cartItemId());
 
       // 본인의 장바구니 아이템인지 확인
       if (!cartItem.getUserId().equals(request.userId())) {
@@ -89,10 +83,7 @@ public class CreateOrderUseCase {
     try {
       for (CartItem cartItem : cartItems) {
         // 상품 조회
-        Product product =
-            productRepository
-                .findById(cartItem.getProductId())
-                .orElseThrow(ProductNotFoundException::new);
+        Product product = productRepository.findByIdOrThrow(cartItem.getProductId());
 
         // 재고 확인 및 즉시 차감
         if (!product.hasEnoughStock(cartItem.getQuantity())) {
@@ -107,8 +98,7 @@ public class CreateOrderUseCase {
         Long userCouponId = cartItemCouponMap.get(cartItem.getId());
 
         if (userCouponId != null) {
-          userCoupon =
-              userCouponRepository.findById(userCouponId).orElseThrow(CouponNotFoundException::new);
+          userCoupon = userCouponRepository.findByIdOrThrow(userCouponId);
 
           if (userCoupon.isUsed()) {
             throw new CouponAlreadyUsedException();
@@ -118,10 +108,7 @@ public class CreateOrderUseCase {
             throw new CouponExpiredException();
           }
 
-          Coupon coupon =
-              couponRepository
-                  .findById(userCoupon.getCouponId())
-                  .orElseThrow(CouponNotFoundException::new);
+          Coupon coupon = couponRepository.findByIdOrThrow(userCoupon.getCouponId());
 
           discountAmount = coupon.getDiscountAmount();
         }
@@ -139,10 +126,7 @@ public class CreateOrderUseCase {
       Long finalAmount = totalAmount - totalDiscountAmount;
 
       // 5. Point 검증 및 차감
-      Point point =
-          pointRepository
-              .findByUserId(request.userId())
-              .orElseThrow(InsufficientPointsException::new);
+      Point point = pointRepository.findByUserIdOrThrow(request.userId());
 
       if (!point.hasEnough(finalAmount)) {
         throw new InsufficientPointsException();

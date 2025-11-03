@@ -2,7 +2,6 @@ package com.phm.ecommerce.application.usecase.cart;
 
 import com.phm.ecommerce.domain.cart.CartItem;
 import com.phm.ecommerce.domain.product.Product;
-import com.phm.ecommerce.domain.product.exception.ProductNotFoundException;
 import com.phm.ecommerce.persistence.repository.CartItemRepository;
 import com.phm.ecommerce.persistence.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
@@ -20,8 +19,7 @@ public class AddCartItemUseCase {
   public record Input(Long userId, Long productId, Long quantity) {}
 
   public Output execute(Input input) {
-    Product product = productRepository.findById(input.productId())
-        .orElseThrow(ProductNotFoundException::new);
+    Product product = productRepository.findByIdOrThrow(input.productId());
 
     Optional<CartItem> existingCartItem = cartItemRepository.findByUserIdAndProductId(
         input.userId(), input.productId());
