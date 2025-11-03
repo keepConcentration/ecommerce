@@ -22,13 +22,13 @@ import com.phm.ecommerce.persistence.repository.PointRepository;
 import com.phm.ecommerce.persistence.repository.PointTransactionRepository;
 import com.phm.ecommerce.persistence.repository.ProductRepository;
 import com.phm.ecommerce.persistence.repository.UserCouponRepository;
-import com.phm.ecommerce.presentation.dto.request.CartItemCouponMap;
-import com.phm.ecommerce.presentation.dto.request.CreateOrderRequest;
-import com.phm.ecommerce.presentation.dto.response.OrderItemResponse;
-import com.phm.ecommerce.presentation.dto.response.OrderResponse;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.media.Schema.RequiredMode;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -47,10 +47,29 @@ public class CreateOrderUseCase {
   private final OrderRepository orderRepository;
   private final OrderItemRepository orderItemRepository;
 
-  public OrderResponse execute(CreateOrderRequest request) {
+  @Schema(description = "주문 생성 요청")
+  public record Input(
+      @Schema(description = "사용자 ID", example = "1", requiredMode = RequiredMode.REQUIRED)
+      @NotNull(message = "사용자 ID는 필수입니다")
+      Long userId,
+
+      @Schema(description = "장바구니 아이템별 쿠폰 매핑 (비어있으면 전체 장바구니 주문)")
+      List<CartItemCouponInfo> cartItemCouponMaps) {}
+
+  @Schema(description = "장바구니 아이템-쿠폰 매핑")
+  public record CartItemCouponInfo(
+      @Schema(description = "장바구니 아이템 ID", example = "1", requiredMode = RequiredMode.REQUIRED)
+      @NotNull(message = "장바구니 아이템 ID는 필수입니다")
+      Long cartItemId,
+
+      @Schema(description = "사용할 쿠폰 ID", example = "10", requiredMode = RequiredMode.REQUIRED)
+      @NotNull(message = "사용자 쿠폰 ID는 필수입니다")
+      Long userCouponId) {}
+
+  public Output execute(Input request) {
     // 1. 주문할 장바구니 아이템 조회
     List<CartItem> cartItems = new ArrayList<>();
-    for (CartItemCouponMap map : request.cartItemCouponMaps()) {
+    for (CartItemCouponInfo map : request.cartItemCouponMaps()) {
       CartItem cartItem =
           cartItemRepository
               .findById(map.cartItemId())
@@ -68,10 +87,10 @@ public class CreateOrderUseCase {
       throw new IllegalStateException("주문할 장바구니 아이템이 없습니다");
     }
 
-    // 2. CartItemCouponMap을 Map으로 변환 (빠른 조회)
+    // 2. CartItemCouponInfo을 Map으로 변환 (빠른 조회)
     Map<Long, Long> cartItemCouponMap = new HashMap<>();
     if (request.cartItemCouponMaps() != null) {
-      for (CartItemCouponMap map : request.cartItemCouponMaps()) {
+      for (CartItemCouponInfo map : request.cartItemCouponMaps()) {
         cartItemCouponMap.put(map.cartItemId(), map.userCouponId());
       }
     }
@@ -151,7 +170,7 @@ public class CreateOrderUseCase {
       order = orderRepository.save(order);
 
       // 7. OrderItem 생성 및 쿠폰 사용 처리
-      List<OrderItemResponse> orderItemResponses = new ArrayList<>();
+      List<OrderItemInfo> orderItemInfos = new ArrayList<>();
 
       for (OrderItemData data : orderItemDataList) {
         OrderItem orderItem =
@@ -173,8 +192,8 @@ public class CreateOrderUseCase {
         }
 
         // Response 생성
-        orderItemResponses.add(
-            new OrderItemResponse(
+        orderItemInfos.add(
+            new OrderItemInfo(
                 orderItem.getId(),
                 orderItem.getProductId(),
                 orderItem.getProductName(),
@@ -197,14 +216,14 @@ public class CreateOrderUseCase {
       }
 
       // 10. Response 반환
-      return new OrderResponse(
+      return new Output(
           order.getId(),
           order.getUserId(),
           order.getTotalAmount(),
           order.getDiscountAmount(),
           order.getFinalAmount(),
           order.getCreatedAt(),
-          orderItemResponses);
+          orderItemInfos);
 
     } catch (Exception e) {
       // 예외 발생 시 모든 변경사항 롤백
@@ -244,6 +263,58 @@ public class CreateOrderUseCase {
       throw e;
     }
   }
+
+  @Schema(description = "주문 정보")
+  public record Output(
+      @Schema(description = "주문 ID", example = "1")
+      Long orderId,
+
+      @Schema(description = "사용자 ID", example = "1")
+      Long userId,
+
+      @Schema(description = "전체 주문 금액", example = "3035000")
+      Long totalAmount,
+
+      @Schema(description = "전체 할인 금액", example = "55000")
+      Long discountAmount,
+
+      @Schema(description = "최종 결제 금액", example = "2980000")
+      Long finalAmount,
+
+      @Schema(description = "주문 생성일시", example = "2025-01-20T15:30:00")
+      LocalDateTime createdAt,
+
+      @Schema(description = "주문 아이템 목록")
+      List<OrderItemInfo> orderItems) {}
+
+  @Schema(description = "주문 아이템 정보")
+  public record OrderItemInfo(
+      @Schema(description = "주문 아이템 ID", example = "1")
+      Long orderItemId,
+
+      @Schema(description = "상품 ID", example = "1")
+      Long productId,
+
+      @Schema(description = "상품명", example = "노트북")
+      String productName,
+
+      @Schema(description = "수량", example = "2")
+      Long quantity,
+
+      @Schema(description = "단가", example = "1500000")
+      Long price,
+
+      @Schema(description = "총 가격", example = "3000000")
+      Long totalPrice,
+
+      @Schema(description = "할인 금액", example = "50000")
+      Long discountAmount,
+
+      @Schema(description = "최종 금액", example = "2950000")
+      Long finalAmount,
+
+      @Schema(description = "사용한 쿠폰 ID", example = "10")
+      Long userCouponId) {}
 
   // 내부 데이터 클래스
   private static class OrderItemData {
