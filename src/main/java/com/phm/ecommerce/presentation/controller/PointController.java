@@ -1,22 +1,27 @@
 package com.phm.ecommerce.presentation.controller;
 
+import com.phm.ecommerce.application.usecase.point.GetPointsUseCase;
 import com.phm.ecommerce.presentation.common.ApiResponse;
 import com.phm.ecommerce.presentation.controller.api.PointApi;
 import com.phm.ecommerce.presentation.dto.request.ChargePointsRequest;
 import com.phm.ecommerce.presentation.dto.response.ChargedPointResponse;
 import com.phm.ecommerce.presentation.dto.response.PointResponse;
 import com.phm.ecommerce.presentation.dto.response.PointTransactionResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
+@RequiredArgsConstructor
 public class PointController implements PointApi {
+
+  private final GetPointsUseCase getPointsUseCase;
 
   @Override
   public ApiResponse<PointResponse> getPoints(Long userId) {
-    PointResponse point = new PointResponse(1L, userId, 50000L, LocalDateTime.of(2025, 1, 20, 10, 0));
+    PointResponse point = getPointsUseCase.execute(userId);
     return ApiResponse.success(point);
   }
 
