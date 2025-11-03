@@ -6,6 +6,7 @@ import com.phm.ecommerce.presentation.common.ApiResponse;
 import com.phm.ecommerce.presentation.controller.api.ProductApi;
 import com.phm.ecommerce.presentation.dto.response.PopularProductResponse;
 import com.phm.ecommerce.presentation.dto.response.ProductResponse;
+import com.phm.ecommerce.presentation.mapper.ProductMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -18,23 +19,19 @@ public class ProductController implements ProductApi {
 
   private final GetProductsUseCase getProductsUseCase;
   private final GetProductByIdUseCase getProductByIdUseCase;
+  private final ProductMapper productMapper;
 
   @Override
   public ApiResponse<List<ProductResponse>> getProducts() {
     List<GetProductsUseCase.Output> outputs = getProductsUseCase.execute();
-    List<ProductResponse> products = outputs.stream()
-        .map(output -> new ProductResponse(output.productId(), output.name(), output.price(),
-            output.quantity(), output.viewCount(), output.createdAt(), output.updatedAt()))
-        .toList();
-    return ApiResponse.success(products);
+    return ApiResponse.success(productMapper.toResponses(outputs));
   }
 
   @Override
   public ApiResponse<ProductResponse> getProductById(Long productId) {
-    GetProductByIdUseCase.Output output = getProductByIdUseCase.execute(new GetProductByIdUseCase.Input(productId));
-    ProductResponse product = new ProductResponse(output.productId(), output.name(), output.price(),
-        output.quantity(), output.viewCount(), output.createdAt(), output.updatedAt());
-    return ApiResponse.success(product);
+    GetProductByIdUseCase.Output output = getProductByIdUseCase.execute(
+        productMapper.toInput(productId));
+    return ApiResponse.success(productMapper.toResponse(output));
   }
 
   @Override
