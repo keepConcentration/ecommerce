@@ -1,5 +1,6 @@
 package com.phm.ecommerce.domain.coupon;
 
+import com.phm.ecommerce.domain.coupon.exception.CouponSoldOutException;
 import lombok.Getter;
 
 @Getter
@@ -41,7 +42,7 @@ public class Coupon {
 
   public void issue() {
     if (!canIssue()) {
-      throw new IllegalStateException("쿠폰이 모두 소진되었습니다");
+      throw new CouponSoldOutException();
     }
     this.issuedQuantity++;
   }

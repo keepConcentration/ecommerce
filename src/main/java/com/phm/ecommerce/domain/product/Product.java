@@ -1,6 +1,7 @@
 package com.phm.ecommerce.domain.product;
 
 import com.phm.ecommerce.domain.common.BaseEntity;
+import com.phm.ecommerce.domain.product.exception.InsufficientStockException;
 import lombok.Getter;
 
 @Getter
@@ -37,8 +38,8 @@ public class Product extends BaseEntity {
   }
 
   public void decreaseStock(Long amount) {
-    if (this.quantity < amount) {
-      throw new IllegalStateException("재고가 부족합니다");
+    if (!hasEnoughStock(amount)) {
+      throw new InsufficientStockException(this.getId(), amount, this.quantity);
     }
     this.quantity -= amount;
     updateTimestamp();

@@ -1,6 +1,7 @@
 package com.phm.ecommerce.domain.order;
 
 import com.phm.ecommerce.domain.common.BaseEntity;
+import com.phm.ecommerce.domain.order.exception.InvalidDiscountAmountException;
 import lombok.Getter;
 
 @Getter
@@ -59,7 +60,7 @@ public class OrderItem extends BaseEntity {
     Long finalAmount = totalPrice - discountAmount;
 
     if (finalAmount < 0) {
-      throw new IllegalArgumentException("최종 금액은 0 이상이어야 합니다");
+      throw new InvalidDiscountAmountException(totalPrice, discountAmount, finalAmount);
     }
 
     return new OrderItem(

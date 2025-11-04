@@ -2,15 +2,12 @@ package com.phm.ecommerce.application.usecase.order;
 
 import com.phm.ecommerce.domain.coupon.Coupon;
 import com.phm.ecommerce.domain.coupon.UserCoupon;
-import com.phm.ecommerce.domain.coupon.exception.CouponAlreadyUsedException;
-import com.phm.ecommerce.domain.coupon.exception.CouponExpiredException;
 import com.phm.ecommerce.domain.order.Order;
 import com.phm.ecommerce.domain.order.OrderItem;
+import com.phm.ecommerce.domain.order.OrderPricingService;
 import com.phm.ecommerce.domain.point.Point;
 import com.phm.ecommerce.domain.point.PointTransaction;
-import com.phm.ecommerce.domain.point.exception.InsufficientPointsException;
 import com.phm.ecommerce.domain.product.Product;
-import com.phm.ecommerce.domain.product.exception.InsufficientStockException;
 import com.phm.ecommerce.persistence.repository.CouponRepository;
 import com.phm.ecommerce.persistence.repository.OrderItemRepository;
 import com.phm.ecommerce.persistence.repository.OrderRepository;
@@ -35,6 +32,7 @@ public class CreateDirectOrderUseCase {
   private final PointTransactionRepository pointTransactionRepository;
   private final OrderRepository orderRepository;
   private final OrderItemRepository orderItemRepository;
+  private final OrderPricingService orderPricingService;
 
   public record Input(
       Long userId,
@@ -44,60 +42,33 @@ public class CreateDirectOrderUseCase {
 
   // TODO 기능 분리
   public Output execute(Input request) {
-    // 1. Product 검증 및 재고 확인
     Product product = productRepository.findByIdOrThrow(request.productId());
 
-    if (!product.hasEnoughStock(request.quantity())) {
-      throw new InsufficientStockException();
-    }
-
-    // catch 블록에서 접근 가능하도록 변수 선언
     UserCoupon userCoupon = null;
     Long discountAmount = 0L;
     Long totalAmount = 0L;
     Long finalAmount = 0L;
 
     try {
-      // 2. 재고 즉시 차감
       product.decreaseStock(request.quantity());
       productRepository.save(product);
 
-      // 3. 쿠폰 검증 및 할인 금액 계산
       if (request.userCouponId() != null) {
         userCoupon = userCouponRepository.findByIdOrThrow(request.userCouponId());
-
-        if (userCoupon.isUsed()) {
-          throw new CouponAlreadyUsedException();
-        }
-
-        if (userCoupon.isExpired()) {
-          throw new CouponExpiredException();
-        }
-
         Coupon coupon = couponRepository.findByIdOrThrow(userCoupon.getCouponId());
-
-        discountAmount = coupon.getDiscountAmount();
+        discountAmount = userCoupon.calculateDiscount(coupon);
       }
 
-      // 4. 금액 계산
-      totalAmount = product.getPrice() * request.quantity();
-      finalAmount = totalAmount - discountAmount;
+      totalAmount = orderPricingService.calculateItemTotal(product, request.quantity());
+      finalAmount = orderPricingService.calculateFinalAmount(totalAmount, discountAmount);
 
-      // 5. Point 검증 및 차감
       Point point = pointRepository.findByUserIdOrThrow(request.userId());
-
-      if (!point.hasEnough(finalAmount)) {
-        throw new InsufficientPointsException();
-      }
-
       point.deduct(finalAmount);
       pointRepository.save(point);
 
-      // 6. Order 생성
       Order order = Order.create(request.userId(), totalAmount, discountAmount);
       order = orderRepository.save(order);
 
-      // 7. OrderItem 생성
       OrderItem orderItem = OrderItem.create(
           order.getId(),
           request.userId(),
@@ -110,13 +81,11 @@ public class CreateDirectOrderUseCase {
       );
       orderItem = orderItemRepository.save(orderItem);
 
-      // 8. 쿠폰 사용 처리
       if (userCoupon != null) {
         userCoupon.use();
         userCouponRepository.save(userCoupon);
       }
 
-      // 9. PointTransaction 생성
       PointTransaction pointTransaction = PointTransaction.createDeduction(
           point.getId(),
           order.getId(),
@@ -124,7 +93,6 @@ public class CreateDirectOrderUseCase {
       );
       pointTransactionRepository.save(pointTransaction);
 
-      // 10. Response 반환
       OrderItemInfo orderItemInfo = new OrderItemInfo(
           orderItem.getId(),
           orderItem.getProductId(),

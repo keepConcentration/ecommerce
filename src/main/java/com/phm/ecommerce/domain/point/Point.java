@@ -1,6 +1,7 @@
 package com.phm.ecommerce.domain.point;
 
 import com.phm.ecommerce.domain.common.BaseEntity;
+import com.phm.ecommerce.domain.point.exception.InsufficientPointsException;
 import lombok.Getter;
 
 @Getter
@@ -35,8 +36,8 @@ public class Point extends BaseEntity {
 
   public void deduct(Long amount) {
     validateAmount(amount);
-    if (this.amount < amount) {
-      throw new IllegalStateException("포인트 잔액이 부족합니다");
+    if (!hasEnough(amount)) {
+      throw new InsufficientPointsException();
     }
     this.amount -= amount;
     updateTimestamp();
