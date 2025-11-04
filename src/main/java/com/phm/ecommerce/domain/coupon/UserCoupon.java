@@ -1,6 +1,8 @@
 package com.phm.ecommerce.domain.coupon;
 
 import com.phm.ecommerce.domain.common.BaseEntity;
+import com.phm.ecommerce.domain.coupon.exception.CouponAlreadyUsedException;
+import com.phm.ecommerce.domain.coupon.exception.CouponExpiredException;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
@@ -52,10 +54,17 @@ public class UserCoupon extends BaseEntity {
     return LocalDateTime.now().isAfter(this.expiredAt);
   }
 
-  public void use() {
-    if (!isUsable()) {
-      throw new IllegalStateException("사용할 수 없는 쿠폰입니다");
+  public void validateUsable() {
+    if (isUsed()) {
+      throw new CouponAlreadyUsedException();
     }
+    if (isExpired()) {
+      throw new CouponExpiredException();
+    }
+  }
+
+  public void use() {
+    validateUsable();
     this.usedAt = LocalDateTime.now();
     updateTimestamp();
   }
@@ -63,5 +72,10 @@ public class UserCoupon extends BaseEntity {
   public void rollbackUsage() {
     this.usedAt = null;
     updateTimestamp();
+  }
+
+  public Long calculateDiscount(Coupon coupon) {
+    validateUsable();
+    return coupon.getDiscountAmount();
   }
 }

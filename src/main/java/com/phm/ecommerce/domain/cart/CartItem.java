@@ -1,5 +1,7 @@
 package com.phm.ecommerce.domain.cart;
 
+import com.phm.ecommerce.domain.cart.exception.CartItemOwnershipViolationException;
+import com.phm.ecommerce.domain.cart.exception.InvalidCartQuantityException;
 import com.phm.ecommerce.domain.common.BaseEntity;
 import lombok.Getter;
 
@@ -44,7 +46,17 @@ public class CartItem extends BaseEntity {
 
   private static void validateQuantity(Long quantity) {
     if (quantity == null || quantity <= 0) {
-      throw new IllegalArgumentException("수량은 1 이상이어야 합니다");
+      throw new InvalidCartQuantityException();
     }
+  }
+
+  public void validateOwnership(Long requestUserId) {
+    if (!belongsTo(requestUserId)) {
+      throw new CartItemOwnershipViolationException();
+    }
+  }
+
+  public boolean belongsTo(Long userId) {
+    return this.userId.equals(userId);
   }
 }
