@@ -1,6 +1,5 @@
 package com.phm.ecommerce.domain.order;
 
-import com.phm.ecommerce.domain.order.exception.InvalidDiscountAmountException;
 import com.phm.ecommerce.domain.order.exception.InvalidOrderAmountException;
 import com.phm.ecommerce.domain.order.exception.InvalidOrderQuantityException;
 import com.phm.ecommerce.domain.order.exception.InvalidProductInfoException;
@@ -21,11 +20,8 @@ public class OrderPricingService {
     validateAmount(totalAmount, "총액");
     validateAmount(discountAmount, "할인 금액");
 
-    Long finalAmount = totalAmount - discountAmount;
-
-    if (finalAmount < 0) {
-      throw new InvalidDiscountAmountException(totalAmount, discountAmount, finalAmount);
-    }
+    Long actualDiscountAmount = Math.min(discountAmount, totalAmount);
+    Long finalAmount = totalAmount - actualDiscountAmount;
 
     return finalAmount;
   }

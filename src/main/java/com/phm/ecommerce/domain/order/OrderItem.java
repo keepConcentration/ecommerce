@@ -1,7 +1,6 @@
 package com.phm.ecommerce.domain.order;
 
 import com.phm.ecommerce.domain.common.BaseEntity;
-import com.phm.ecommerce.domain.order.exception.InvalidDiscountAmountException;
 import lombok.Getter;
 
 @Getter
@@ -57,11 +56,9 @@ public class OrderItem extends BaseEntity {
       Long discountAmount,
       Long userCouponId) {
     Long totalPrice = price * quantity;
-    Long finalAmount = totalPrice - discountAmount;
 
-    if (finalAmount < 0) {
-      throw new InvalidDiscountAmountException(totalPrice, discountAmount, finalAmount);
-    }
+    Long actualDiscountAmount = Math.min(discountAmount, totalPrice);
+    Long finalAmount = totalPrice - actualDiscountAmount;
 
     return new OrderItem(
         null,
@@ -73,7 +70,7 @@ public class OrderItem extends BaseEntity {
         quantity,
         price,
         totalPrice,
-        discountAmount,
+        actualDiscountAmount,
         finalAmount);
   }
 }
