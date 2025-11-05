@@ -19,6 +19,8 @@ public interface UserCouponRepository {
 
   List<UserCoupon> findByUserId(Long userId);
 
+  List<UserCoupon> findByCouponId(Long couponId);
+
   boolean existsByUserIdAndCouponId(Long userId, Long couponId);
 
   void deleteById(Long id);
