@@ -1,4 +1,4 @@
-package com.phm.ecommerce.application.lock;
+package com.phm.ecommerce.integration;
 
 import com.phm.ecommerce.application.usecase.coupon.IssueCouponUseCase;
 import com.phm.ecommerce.domain.coupon.Coupon;
@@ -23,7 +23,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-class LockManagerConcurrencyTest {
+@DisplayName("쿠폰 동시 발급 통합 테스트")
+class CouponConcurrencyIntegrationTest {
 
   @Autowired
   private IssueCouponUseCase issueCouponUseCase;
@@ -40,7 +41,7 @@ class LockManagerConcurrencyTest {
 
   @BeforeEach
   void setUp() {
-    // 100개 한정 쿠폰 생성
+    // 10개 한정 쿠폰 생성
     Coupon coupon = Coupon.create(
         "선착순 쿠폰",
         10000L,
@@ -52,7 +53,7 @@ class LockManagerConcurrencyTest {
   }
 
   @Test
-  @DisplayName("100명이 동시에 10개 한정 쿠폰 발급 - 10명만 성공")
+  @DisplayName("100명이 동시에 10개 한정 쿠폰 발급 - 10명 성공")
   void concurrentCouponIssuance_shouldIssueExactlyTenCoupons() throws InterruptedException {
     // given
     ExecutorService executorService = Executors.newFixedThreadPool(TOTAL_USERS);
@@ -89,12 +90,12 @@ class LockManagerConcurrencyTest {
     assertThat(issuedCoupons).hasSize(TOTAL_QUANTITY);
 
     Coupon coupon = couponRepository.findByIdOrThrow(couponId);
-    assertThat(coupon.getIssuedQuantity()).isEqualTo(TOTAL_QUANTITY);
+    assertThat(coupon.getIssuedQuantity()).isEqualTo((long) TOTAL_QUANTITY);
     assertThat(coupon.getRemainingQuantity()).isZero();
   }
 
   @Test
-  @DisplayName("50명이 동시에 100개 쿠폰 발급 - 모두 성공")
+  @DisplayName("50명이 동시에 100개 쿠폰 발급 - 50명 성공")
   void concurrentCouponIssuance_whenEnoughStock_shouldIssueAll() throws InterruptedException {
     // given
     Coupon coupon = Coupon.create("충분한 재고 쿠폰", 5000L, 100L, 30);
