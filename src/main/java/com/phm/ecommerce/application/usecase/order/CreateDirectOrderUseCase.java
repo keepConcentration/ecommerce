@@ -41,7 +41,6 @@ public class CreateDirectOrderUseCase {
     UserCoupon savedUserCoupon = null;
     Point savedPoint = null;
     Order savedOrder = null;
-    OrderItem savedOrderItem = null;
     PointTransaction savedPointTransaction = null;
     Long finalAmount = 0L;
 
@@ -78,7 +77,7 @@ public class CreateDirectOrderUseCase {
               savedProduct.getPrice(),
               discountAmount,
               request.userCouponId());
-      savedOrderItem = orderItemRepository.save(orderItem);
+      orderItem = orderItemRepository.save(orderItem);
 
       if (userCoupon != null) {
         userCoupon.use();
@@ -91,15 +90,15 @@ public class CreateDirectOrderUseCase {
 
       OrderItemInfo orderItemInfo =
           new OrderItemInfo(
-              savedOrderItem.getId(),
-              savedOrderItem.getProductId(),
-              savedOrderItem.getProductName(),
-              savedOrderItem.getQuantity(),
-              savedOrderItem.getPrice(),
-              savedOrderItem.getTotalPrice(),
-              savedOrderItem.getDiscountAmount(),
-              savedOrderItem.getFinalAmount(),
-              savedOrderItem.getUserCouponId());
+              orderItem.getId(),
+              orderItem.getProductId(),
+              orderItem.getProductName(),
+              orderItem.getQuantity(),
+              orderItem.getPrice(),
+              orderItem.getTotalPrice(),
+              orderItem.getDiscountAmount(),
+              orderItem.getFinalAmount(),
+              orderItem.getUserCouponId());
 
       return new Output(
           savedOrder.getId(),
@@ -111,20 +110,18 @@ public class CreateDirectOrderUseCase {
           List.of(orderItemInfo));
 
     } catch (Exception e) {
-      // 재고 롤백
       if (savedProduct != null) {
+        savedProduct.increaseStock(request.quantity());
         try {
-          savedProduct.increaseStock(request.quantity());
           productRepository.save(savedProduct);
         } catch (Exception rollbackException) {
 
         }
       }
 
-      // 포인트 롤백
       if (savedPoint != null) {
+        savedPoint.charge(finalAmount);
         try {
-          savedPoint.charge(finalAmount);
           pointRepository.save(savedPoint);
         } catch (Exception rollbackException) {
           // TODO: 로깅 추가
@@ -133,23 +130,16 @@ public class CreateDirectOrderUseCase {
 
       if (savedOrder != null) {
         try {
+          orderItemRepository.deleteByOrderId(savedOrder.getId());
           orderRepository.deleteById(savedOrder.getId());
         } catch (Exception rollbackException) {
           // TODO: 로깅 추가
         }
       }
 
-      if (savedOrderItem != null) {
-        try {
-          orderItemRepository.deleteById(savedOrderItem.getId());
-        } catch (Exception rollbackException) {
-          // TODO: 로깅 추가
-        }
-      }
-
       if (savedUserCoupon != null) {
+        savedUserCoupon.rollbackUsage();
         try {
-          savedUserCoupon.rollbackUsage();
           userCouponRepository.save(savedUserCoupon);
         } catch (Exception rollbackException) {
           // TODO: 로깅 추가

@@ -53,4 +53,9 @@ public class InMemoryOrderItemRepository implements OrderItemRepository {
   public void deleteById(Long id) {
     store.remove(id);
   }
+
+  @Override
+  public void deleteByOrderId(Long orderId) {
+    store.values().removeIf(item -> item.getOrderId().equals(orderId));
+  }
 }
