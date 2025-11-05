@@ -5,6 +5,7 @@ import com.phm.ecommerce.application.usecase.cart.DeleteCartItemUseCase;
 import com.phm.ecommerce.application.usecase.cart.GetCartItemsUseCase;
 import com.phm.ecommerce.application.usecase.cart.UpdateCartItemQuantityUseCase;
 import com.phm.ecommerce.presentation.dto.request.AddCartItemRequest;
+import com.phm.ecommerce.presentation.dto.request.DeleteCartItemRequest;
 import com.phm.ecommerce.presentation.dto.request.UpdateQuantityRequest;
 import com.phm.ecommerce.presentation.dto.response.CartItemResponse;
 import com.phm.ecommerce.presentation.dto.response.CartResponse;
@@ -61,7 +62,7 @@ public class CartMapper {
         output.quantity());
   }
 
-  public DeleteCartItemUseCase.Input toDeleteInput(Long cartItemId) {
-    return new DeleteCartItemUseCase.Input(cartItemId);
+  public DeleteCartItemUseCase.Input toDeleteInput(Long cartItemId, DeleteCartItemRequest request) {
+    return new DeleteCartItemUseCase.Input(cartItemId, request.userId());
   }
 }

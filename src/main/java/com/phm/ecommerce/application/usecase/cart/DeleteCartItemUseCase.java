@@ -2,6 +2,7 @@ package com.phm.ecommerce.application.usecase.cart;
 
 import com.phm.ecommerce.domain.cart.CartItem;
 import com.phm.ecommerce.persistence.repository.CartItemRepository;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -11,11 +12,13 @@ public class DeleteCartItemUseCase {
 
   private final CartItemRepository cartItemRepository;
 
-  public record Input(Long cartItemId) {}
+  public record Input(Long cartItemId, Long userId) {}
 
   public void execute(Input input) {
-    CartItem cartItem = cartItemRepository.findByIdOrThrow(input.cartItemId());
+    List<CartItem> cartItems = cartItemRepository.findByUserId(input.userId());
 
-    cartItemRepository.deleteById(cartItem.getId());
+    cartItems.stream()
+        .filter(item -> item.getId().equals(input.cartItemId()))
+        .forEach(item -> cartItemRepository.deleteById(item.getId()));
   }
 }

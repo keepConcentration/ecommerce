@@ -7,6 +7,7 @@ import com.phm.ecommerce.application.usecase.cart.UpdateCartItemQuantityUseCase;
 import com.phm.ecommerce.presentation.common.ApiResponse;
 import com.phm.ecommerce.presentation.controller.api.CartApi;
 import com.phm.ecommerce.presentation.dto.request.AddCartItemRequest;
+import com.phm.ecommerce.presentation.dto.request.DeleteCartItemRequest;
 import com.phm.ecommerce.presentation.dto.request.UpdateQuantityRequest;
 import com.phm.ecommerce.presentation.dto.response.CartItemResponse;
 import com.phm.ecommerce.presentation.dto.response.CartResponse;
@@ -51,8 +52,8 @@ public class CartController implements CartApi {
   }
 
   @Override
-  public ResponseEntity<Void> deleteCartItem(Long cartItemId) {
-    deleteCartItemUseCase.execute(cartMapper.toDeleteInput(cartItemId));
+  public ResponseEntity<Void> deleteCartItem(Long cartItemId, DeleteCartItemRequest request) {
+    deleteCartItemUseCase.execute(cartMapper.toDeleteInput(cartItemId, request));
     return ResponseEntity.noContent().build();
   }
 }

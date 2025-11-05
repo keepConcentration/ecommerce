@@ -2,6 +2,7 @@ package com.phm.ecommerce.presentation.controller.api;
 
 import com.phm.ecommerce.presentation.common.ApiResponse;
 import com.phm.ecommerce.presentation.dto.request.AddCartItemRequest;
+import com.phm.ecommerce.presentation.dto.request.DeleteCartItemRequest;
 import com.phm.ecommerce.presentation.dto.request.UpdateQuantityRequest;
 import com.phm.ecommerce.presentation.dto.response.CartItemResponse;
 import com.phm.ecommerce.presentation.dto.response.CartResponse;
@@ -83,5 +84,6 @@ public interface CartApi {
       })
   ResponseEntity<Void> deleteCartItem(
       @Parameter(description = "장바구니 아이템 ID", required = true, example = "1") @PathVariable
-          Long cartItemId);
+          Long cartItemId,
+      @Valid @RequestBody DeleteCartItemRequest request);
 }
