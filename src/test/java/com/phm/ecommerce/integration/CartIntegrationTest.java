@@ -8,6 +8,7 @@ import com.phm.ecommerce.domain.product.exception.ProductErrorCode;
 import com.phm.ecommerce.persistence.repository.CartItemRepository;
 import com.phm.ecommerce.persistence.repository.ProductRepository;
 import com.phm.ecommerce.presentation.dto.request.AddCartItemRequest;
+import com.phm.ecommerce.presentation.dto.request.DeleteCartItemRequest;
 import com.phm.ecommerce.presentation.dto.request.UpdateQuantityRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -169,12 +170,14 @@ class CartIntegrationTest {
   @DisplayName("장바구니 상품 삭제 - 성공")
   void deleteCartItem_Success() throws Exception {
     // given
+    DeleteCartItemRequest request = new DeleteCartItemRequest(testUserId);
     CartItem cartItem = CartItem.create(testUserId, testProduct.getId(), 3L);
     CartItem savedCartItem = cartItemRepository.save(cartItem);
 
     // when & then
     mockMvc.perform(delete("/api/v1/cart/items/{cartItemId}", savedCartItem.getId())
-            .contentType(MediaType.APPLICATION_JSON))
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
         .andDo(print())
         .andExpect(status().isNoContent());
 
@@ -185,12 +188,40 @@ class CartIntegrationTest {
   @Test
   @DisplayName("장바구니 상품 삭제 - 실패 (존재하지 않는 장바구니 아이템)")
   void deleteCartItem_NotFound() throws Exception {
+    // given
+    DeleteCartItemRequest request = new DeleteCartItemRequest(testUserId);
+
     // when & then
     mockMvc.perform(delete("/api/v1/cart/items/{cartItemId}", 999L)
-            .contentType(MediaType.APPLICATION_JSON))
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
         .andDo(print())
         .andExpect(status().isNotFound())
         .andExpect(jsonPath("$.status").value(false))
         .andExpect(jsonPath("$.error.code").value(CartErrorCode.CART_ITEM_NOT_FOUND.getCode()));
+  }
+
+  @Test
+  @DisplayName("장바구니 상품 삭제 - 실패 (다른 사용자의 장바구니 아이템)")
+  void deleteCartItem_OwnershipViolation() throws Exception {
+    // given
+    Long ownerUserId = 1L;
+    Long otherUserId = 2L;
+
+    CartItem cartItem = CartItem.create(ownerUserId, testProduct.getId(), 3L);
+    CartItem savedCartItem = cartItemRepository.save(cartItem);
+
+    DeleteCartItemRequest request = new DeleteCartItemRequest(otherUserId);
+
+    // when & then
+    mockMvc.perform(delete("/api/v1/cart/items/{cartItemId}", savedCartItem.getId())
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(objectMapper.writeValueAsString(request)))
+        .andDo(print())
+        .andExpect(status().isForbidden())
+        .andExpect(jsonPath("$.status").value(false))
+        .andExpect(jsonPath("$.error.code").value(CartErrorCode.CART_ITEM_OWNERSHIP_VIOLATION.getCode()));
+
+    assertThat(cartItemRepository.findById(savedCartItem.getId())).isPresent();
   }
 }
