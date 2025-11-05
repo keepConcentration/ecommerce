@@ -3,7 +3,6 @@ package com.phm.ecommerce.application.usecase.coupon;
 import com.phm.ecommerce.domain.coupon.Coupon;
 import com.phm.ecommerce.domain.coupon.UserCoupon;
 import com.phm.ecommerce.domain.coupon.exception.CouponAlreadyIssuedException;
-import com.phm.ecommerce.domain.coupon.exception.CouponSoldOutException;
 import com.phm.ecommerce.persistence.repository.CouponRepository;
 import com.phm.ecommerce.persistence.repository.UserCouponRepository;
 import lombok.RequiredArgsConstructor;
@@ -24,23 +23,14 @@ public class IssueCouponUseCase {
 
   // TODO 동시성 이슈 처리
   public Output execute(Input request) {
-    Coupon coupon = couponRepository.findByIdOrThrow(request.couponId());
-
     boolean alreadyIssued = userCouponRepository.existsByUserIdAndCouponId(
         request.userId(), request.couponId());
     if (alreadyIssued) {
       throw new CouponAlreadyIssuedException();
     }
 
-    if (!coupon.canIssue()) {
-      throw new CouponSoldOutException();
-    }
-    coupon.issue();
-
-    UserCoupon userCoupon = UserCoupon.issue(request.userId(), request.couponId(), coupon.getValidDays());
-    userCoupon = userCouponRepository.save(userCoupon);
-
-    couponRepository.save(coupon);
+    Coupon coupon = couponRepository.findByIdOrThrow(request.couponId());
+    UserCoupon userCoupon = issue(request.userId(), coupon);
 
     return new Output(
         userCoupon.getId(),
@@ -51,6 +41,14 @@ public class IssueCouponUseCase {
         userCoupon.getIssuedAt(),
         userCoupon.getExpiredAt()
     );
+  }
+
+  private UserCoupon issue(Long userId, Coupon coupon) {
+      coupon.issue();
+      UserCoupon userCoupon = UserCoupon.issue(userId, coupon.getId(), coupon.getValidDays());
+      userCoupon = userCouponRepository.save(userCoupon);
+      couponRepository.save(coupon);
+      return userCoupon;
   }
 
   public record Output(
