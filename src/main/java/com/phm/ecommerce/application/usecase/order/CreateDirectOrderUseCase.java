@@ -34,113 +34,132 @@ public class CreateDirectOrderUseCase {
   private final OrderItemRepository orderItemRepository;
   private final OrderPricingService orderPricingService;
 
-  public record Input(
-      Long userId,
-      Long productId,
-      Long quantity,
-      Long userCouponId) {}
+  public record Input(Long userId, Long productId, Long quantity, Long userCouponId) {}
 
-  // TODO 기능 분리
   public Output execute(Input request) {
-    Product product = productRepository.findByIdOrThrow(request.productId());
-
-    UserCoupon userCoupon = null;
-    Long discountAmount = 0L;
-    Long totalAmount = 0L;
+    Product savedProduct = null;
+    UserCoupon savedUserCoupon = null;
+    Point savedPoint = null;
+    Order savedOrder = null;
+    OrderItem savedOrderItem = null;
+    PointTransaction savedPointTransaction = null;
     Long finalAmount = 0L;
 
     try {
+      Product product = productRepository.findByIdOrThrow(request.productId());
       product.decreaseStock(request.quantity());
-      productRepository.save(product);
+      savedProduct = productRepository.save(product);
 
+      UserCoupon userCoupon = null;
+      Long discountAmount = 0L;
       if (request.userCouponId() != null) {
         userCoupon = userCouponRepository.findByIdOrThrow(request.userCouponId());
         Coupon coupon = couponRepository.findByIdOrThrow(userCoupon.getCouponId());
         discountAmount = userCoupon.calculateDiscount(coupon);
       }
 
-      totalAmount = orderPricingService.calculateItemTotal(product, request.quantity());
+      Long totalAmount = orderPricingService.calculateItemTotal(savedProduct, request.quantity());
       finalAmount = orderPricingService.calculateFinalAmount(totalAmount, discountAmount);
 
       Point point = pointRepository.findByUserIdOrThrow(request.userId());
       point.deduct(finalAmount);
-      pointRepository.save(point);
+      savedPoint = pointRepository.save(point);
 
       Order order = Order.create(request.userId(), totalAmount, discountAmount);
-      order = orderRepository.save(order);
+      savedOrder = orderRepository.save(order);
 
-      OrderItem orderItem = OrderItem.create(
-          order.getId(),
-          request.userId(),
-          request.productId(),
-          product.getName(),
-          request.quantity(),
-          product.getPrice(),
-          discountAmount,
-          request.userCouponId()
-      );
-      orderItem = orderItemRepository.save(orderItem);
+      OrderItem orderItem =
+          OrderItem.create(
+              savedOrder.getId(),
+              request.userId(),
+              request.productId(),
+              savedProduct.getName(),
+              request.quantity(),
+              savedProduct.getPrice(),
+              discountAmount,
+              request.userCouponId());
+      savedOrderItem = orderItemRepository.save(orderItem);
 
       if (userCoupon != null) {
         userCoupon.use();
-        userCouponRepository.save(userCoupon);
+        savedUserCoupon = userCouponRepository.save(userCoupon);
       }
 
-      PointTransaction pointTransaction = PointTransaction.createDeduction(
-          point.getId(),
-          order.getId(),
-          finalAmount
-      );
-      pointTransactionRepository.save(pointTransaction);
+      PointTransaction pointTransaction =
+          PointTransaction.createDeduction(savedPoint.getId(), savedOrder.getId(), finalAmount);
+      savedPointTransaction = pointTransactionRepository.save(pointTransaction);
 
-      OrderItemInfo orderItemInfo = new OrderItemInfo(
-          orderItem.getId(),
-          orderItem.getProductId(),
-          orderItem.getProductName(),
-          orderItem.getQuantity(),
-          orderItem.getPrice(),
-          orderItem.getTotalPrice(),
-          orderItem.getDiscountAmount(),
-          orderItem.getFinalAmount(),
-          orderItem.getUserCouponId()
-      );
+      OrderItemInfo orderItemInfo =
+          new OrderItemInfo(
+              savedOrderItem.getId(),
+              savedOrderItem.getProductId(),
+              savedOrderItem.getProductName(),
+              savedOrderItem.getQuantity(),
+              savedOrderItem.getPrice(),
+              savedOrderItem.getTotalPrice(),
+              savedOrderItem.getDiscountAmount(),
+              savedOrderItem.getFinalAmount(),
+              savedOrderItem.getUserCouponId());
 
       return new Output(
-          order.getId(),
-          order.getUserId(),
-          order.getTotalAmount(),
-          order.getDiscountAmount(),
-          order.getFinalAmount(),
-          order.getCreatedAt(),
-          List.of(orderItemInfo)
-      );
+          savedOrder.getId(),
+          savedOrder.getUserId(),
+          savedOrder.getTotalAmount(),
+          savedOrder.getDiscountAmount(),
+          savedOrder.getFinalAmount(),
+          savedOrder.getCreatedAt(),
+          List.of(orderItemInfo));
 
     } catch (Exception e) {
-      // 예외 발생 시 모든 변경사항 롤백
-
       // 재고 롤백
-      product.increaseStock(request.quantity());
-      productRepository.save(product);
+      if (savedProduct != null) {
+        try {
+          savedProduct.increaseStock(request.quantity());
+          productRepository.save(savedProduct);
+        } catch (Exception rollbackException) {
 
-      // 포인트 롤백 (포인트 차감 이후 예외 발생한 경우)
-      try {
-        Point point = pointRepository.findByUserId(request.userId()).orElse(null);
-        if (point != null && finalAmount > 0) {
-          point.charge(finalAmount);
-          pointRepository.save(point);
         }
-      } catch (Exception rollbackException) {
-        // 포인트 롤백 실패 시 로그만 남기고 원래 예외 throw
-        // TODO: 로깅 추가
       }
 
-      // 쿠폰 롤백 (쿠폰 사용 처리 이후 예외 발생한 경우)
-      if (userCoupon != null && userCoupon.isUsed()) {
+      // 포인트 롤백
+      if (savedPoint != null) {
         try {
-          userCoupon.rollbackUsage();
-          userCouponRepository.save(userCoupon);
+          savedPoint.charge(finalAmount);
+          pointRepository.save(savedPoint);
         } catch (Exception rollbackException) {
-          // 쿠폰 롤백 실패 시 로그만 남기고 계속 진행
+          // TODO: 로깅 추가
+        }
+      }
+
+      if (savedOrder != null) {
+        try {
+          orderRepository.deleteById(savedOrder.getId());
+        } catch (Exception rollbackException) {
+          // TODO: 로깅 추가
+        }
+      }
+
+      if (savedOrderItem != null) {
+        try {
+          orderItemRepository.deleteById(savedOrderItem.getId());
+        } catch (Exception rollbackException) {
+          // TODO: 로깅 추가
+        }
+      }
+
+      if (savedUserCoupon != null) {
+        try {
+          savedUserCoupon.rollbackUsage();
+          userCouponRepository.save(savedUserCoupon);
+        } catch (Exception rollbackException) {
+          // TODO: 로깅 추가
+        }
+      }
+
+      if (savedPointTransaction != null) {
+        try {
+          pointTransactionRepository.deleteById(savedPointTransaction.getId());
+        } catch (Exception rollbackException) {
           // TODO: 로깅 추가
         }
       }
