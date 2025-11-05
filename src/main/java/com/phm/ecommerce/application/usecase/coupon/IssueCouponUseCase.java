@@ -1,5 +1,6 @@
 package com.phm.ecommerce.application.usecase.coupon;
 
+import com.phm.ecommerce.application.lock.LockManager;
 import com.phm.ecommerce.domain.coupon.Coupon;
 import com.phm.ecommerce.domain.coupon.UserCoupon;
 import com.phm.ecommerce.domain.coupon.exception.CouponAlreadyIssuedException;
@@ -16,31 +17,35 @@ public class IssueCouponUseCase {
 
   private final CouponRepository couponRepository;
   private final UserCouponRepository userCouponRepository;
+  private final LockManager lockManager;
 
   public record Input(
       Long couponId,
       Long userId) {}
 
-  // TODO 동시성 이슈 처리
   public Output execute(Input request) {
-    boolean alreadyIssued = userCouponRepository.existsByUserIdAndCouponId(
-        request.userId(), request.couponId());
-    if (alreadyIssued) {
-      throw new CouponAlreadyIssuedException();
-    }
+    String lockKey = "coupon:" + request.couponId();
 
-    Coupon coupon = couponRepository.findByIdOrThrow(request.couponId());
-    UserCoupon userCoupon = issue(request.userId(), coupon);
+    return lockManager.executeWithLock(lockKey, () -> {
+      boolean alreadyIssued = userCouponRepository.existsByUserIdAndCouponId(
+          request.userId(), request.couponId());
+      if (alreadyIssued) {
+        throw new CouponAlreadyIssuedException();
+      }
 
-    return new Output(
-        userCoupon.getId(),
-        userCoupon.getUserId(),
-        userCoupon.getCouponId(),
-        coupon.getName(),
-        coupon.getDiscountAmount(),
-        userCoupon.getIssuedAt(),
-        userCoupon.getExpiredAt()
-    );
+      Coupon coupon = couponRepository.findByIdOrThrow(request.couponId());
+      UserCoupon userCoupon = issue(request.userId(), coupon);
+
+      return new Output(
+          userCoupon.getId(),
+          userCoupon.getUserId(),
+          userCoupon.getCouponId(),
+          coupon.getName(),
+          coupon.getDiscountAmount(),
+          userCoupon.getIssuedAt(),
+          userCoupon.getExpiredAt()
+      );
+    });
   }
 
   private UserCoupon issue(Long userId, Coupon coupon) {

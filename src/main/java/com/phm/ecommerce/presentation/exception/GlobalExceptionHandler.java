@@ -1,5 +1,6 @@
 package com.phm.ecommerce.presentation.exception;
 
+import com.phm.ecommerce.application.lock.LockAcquisitionException;
 import com.phm.ecommerce.domain.common.exception.BaseException;
 import com.phm.ecommerce.domain.common.exception.CommonErrorCode;
 import com.phm.ecommerce.domain.common.exception.ErrorCode;
@@ -94,19 +95,29 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(IllegalArgumentException.class)
   public ResponseEntity<ApiResponse<Void>> handleIllegalArgumentException(
       IllegalArgumentException e) {
-    log.warn("IllegalArgumentException occurred", e);
+    log.warn("잘못된 인자 예외 발생", e);
     ErrorCode errorCode = CommonErrorCode.INVALID_INPUT;
-    ErrorDetail errorDetail = new ErrorDetail(errorCode.getCode(), e.getMessage(), null);
+    ErrorDetail errorDetail = new ErrorDetail(errorCode.getCode(), e.getMessage());
+    ApiResponse<Void> response = ApiResponse.error(errorDetail);
+    return ResponseEntity.status(errorCode.getHttpStatus()).body(response);
+  }
+
+  @ExceptionHandler(LockAcquisitionException.class)
+  public ResponseEntity<ApiResponse<Void>> handleLockAcquisitionException(
+      LockAcquisitionException e) {
+    log.warn("락 획득 실패", e);
+    ErrorCode errorCode = CommonErrorCode.LOCK_ACQUISITION_FAILED;
+    ErrorDetail errorDetail = new ErrorDetail(errorCode.getCode(), errorCode.getMessage());
     ApiResponse<Void> response = ApiResponse.error(errorDetail);
     return ResponseEntity.status(errorCode.getHttpStatus()).body(response);
   }
 
   @ExceptionHandler(Exception.class)
   public ResponseEntity<ApiResponse<Void>> handleException(Exception e) {
-    log.error("Unexpected error occurred", e);
+    log.error("예기치 않은 오류 발생", e);
 
     ErrorCode errorCode = CommonErrorCode.INTERNAL_SERVER_ERROR;
-    ErrorDetail errorDetail = new ErrorDetail(errorCode.getCode(), errorCode.getMessage(), null);
+    ErrorDetail errorDetail = new ErrorDetail(errorCode.getCode(), errorCode.getMessage());
     ApiResponse<Void> response = ApiResponse.error(errorDetail);
     return ResponseEntity.status(errorCode.getHttpStatus()).body(response);
   }

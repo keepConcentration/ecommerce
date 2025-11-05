@@ -17,6 +17,7 @@ public enum CommonErrorCode implements ErrorCode {
 
   // 409 Conflict
   CONFLICT("CONFLICT", "리소스 충돌이 발생했습니다", HttpStatus.CONFLICT),
+  LOCK_ACQUISITION_FAILED("LOCK_ACQUISITION_FAILED", "동시 처리 중 대기 시간을 초과했습니다. 잠시 후 다시 시도해주세요", HttpStatus.CONFLICT),
 
   // 500 Internal Server Error
   INTERNAL_SERVER_ERROR("INTERNAL_SERVER_ERROR", "일시적인 오류가 발생했습니다. 잠시 후 다시 시도해주세요", HttpStatus.INTERNAL_SERVER_ERROR),
