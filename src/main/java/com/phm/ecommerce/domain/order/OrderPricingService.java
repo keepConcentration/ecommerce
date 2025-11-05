@@ -1,6 +1,10 @@
 package com.phm.ecommerce.domain.order;
 
 import com.phm.ecommerce.domain.order.exception.InvalidDiscountAmountException;
+import com.phm.ecommerce.domain.order.exception.InvalidOrderAmountException;
+import com.phm.ecommerce.domain.order.exception.InvalidOrderQuantityException;
+import com.phm.ecommerce.domain.order.exception.InvalidProductInfoException;
+import com.phm.ecommerce.domain.order.exception.InvalidProductPriceException;
 import com.phm.ecommerce.domain.product.Product;
 import org.springframework.stereotype.Service;
 
@@ -39,25 +43,25 @@ public class OrderPricingService {
 
   private void validateProduct(Product product) {
     if (product == null) {
-      throw new IllegalArgumentException("상품 정보가 null일 수 없습니다");
+      throw new InvalidProductInfoException();
     }
     if (product.getPrice() == null || product.getPrice() < 0) {
-      throw new IllegalArgumentException("상품 가격이 유효하지 않습니다");
+      throw new InvalidProductPriceException(product.getPrice());
     }
   }
 
   private void validateQuantity(Long quantity) {
     if (quantity == null || quantity <= 0) {
-      throw new IllegalArgumentException("수량은 1 이상이어야 합니다");
+      throw new InvalidOrderQuantityException(quantity);
     }
   }
 
   private void validateAmount(Long amount, String fieldName) {
     if (amount == null) {
-      throw new IllegalArgumentException(fieldName + "이(가) null일 수 없습니다");
+      throw new InvalidOrderAmountException(fieldName);
     }
     if (amount < 0) {
-      throw new IllegalArgumentException(fieldName + "은(는) 0보다 작을 수 없습니다. 현재 값: " + amount);
+      throw new InvalidOrderAmountException(fieldName, amount);
     }
   }
 }

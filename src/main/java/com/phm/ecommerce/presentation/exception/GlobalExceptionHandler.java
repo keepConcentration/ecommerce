@@ -22,7 +22,7 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(BaseException.class)
   public ResponseEntity<ApiResponse<Void>> handleBaseException(BaseException e) {
     ErrorCode errorCode = e.getErrorCode();
-    ErrorDetail errorDetail = new ErrorDetail(errorCode.getCode(), e.getMessage(), null);
+    ErrorDetail errorDetail = new ErrorDetail(errorCode.getCode(), e.getMessage());
     ApiResponse<Void> response = ApiResponse.error(errorDetail);
     return ResponseEntity.status(errorCode.getHttpStatus()).body(response);
   }
