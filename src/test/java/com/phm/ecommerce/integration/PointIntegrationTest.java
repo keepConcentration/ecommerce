@@ -2,7 +2,7 @@ package com.phm.ecommerce.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.phm.ecommerce.domain.point.Point;
-import com.phm.ecommerce.persistence.repository.PointRepository;
+import com.phm.ecommerce.infrastructure.repository.PointRepository;
 import com.phm.ecommerce.presentation.dto.request.ChargePointsRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

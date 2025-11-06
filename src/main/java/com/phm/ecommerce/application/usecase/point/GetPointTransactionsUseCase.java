@@ -2,8 +2,8 @@ package com.phm.ecommerce.application.usecase.point;
 
 import com.phm.ecommerce.domain.point.Point;
 import com.phm.ecommerce.domain.point.PointTransaction;
-import com.phm.ecommerce.persistence.repository.PointRepository;
-import com.phm.ecommerce.persistence.repository.PointTransactionRepository;
+import com.phm.ecommerce.infrastructure.repository.PointRepository;
+import com.phm.ecommerce.infrastructure.repository.PointTransactionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

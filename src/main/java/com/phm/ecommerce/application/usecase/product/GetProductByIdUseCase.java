@@ -1,7 +1,7 @@
 package com.phm.ecommerce.application.usecase.product;
 
 import com.phm.ecommerce.domain.product.Product;
-import com.phm.ecommerce.persistence.repository.ProductRepository;
+import com.phm.ecommerce.infrastructure.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

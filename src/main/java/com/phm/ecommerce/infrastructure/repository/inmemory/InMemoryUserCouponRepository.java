@@ -1,7 +1,7 @@
-package com.phm.ecommerce.persistence.repository.inmemory;
+package com.phm.ecommerce.infrastructure.repository.inmemory;
 
 import com.phm.ecommerce.domain.coupon.UserCoupon;
-import com.phm.ecommerce.persistence.repository.UserCouponRepository;
+import com.phm.ecommerce.infrastructure.repository.UserCouponRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;

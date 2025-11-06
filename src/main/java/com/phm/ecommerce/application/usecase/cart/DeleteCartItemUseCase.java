@@ -2,7 +2,7 @@ package com.phm.ecommerce.application.usecase.cart;
 
 import com.phm.ecommerce.domain.cart.CartItem;
 import com.phm.ecommerce.domain.cart.exception.CartItemOwnershipViolationException;
-import com.phm.ecommerce.persistence.repository.CartItemRepository;
+import com.phm.ecommerce.infrastructure.repository.CartItemRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

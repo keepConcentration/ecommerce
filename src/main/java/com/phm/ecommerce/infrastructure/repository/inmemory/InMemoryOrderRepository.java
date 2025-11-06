@@ -1,7 +1,7 @@
-package com.phm.ecommerce.persistence.repository.inmemory;
+package com.phm.ecommerce.infrastructure.repository.inmemory;
 
 import com.phm.ecommerce.domain.order.Order;
-import com.phm.ecommerce.persistence.repository.OrderRepository;
+import com.phm.ecommerce.infrastructure.repository.OrderRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.Map;

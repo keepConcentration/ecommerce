@@ -2,8 +2,8 @@ package com.phm.ecommerce.application.usecase.coupon;
 
 import com.phm.ecommerce.domain.coupon.Coupon;
 import com.phm.ecommerce.domain.coupon.UserCoupon;
-import com.phm.ecommerce.persistence.repository.CouponRepository;
-import com.phm.ecommerce.persistence.repository.UserCouponRepository;
+import com.phm.ecommerce.infrastructure.repository.CouponRepository;
+import com.phm.ecommerce.infrastructure.repository.UserCouponRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

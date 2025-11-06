@@ -1,4 +1,4 @@
-package com.phm.ecommerce.persistence.repository;
+package com.phm.ecommerce.infrastructure.repository;
 
 import com.phm.ecommerce.domain.product.Product;
 import com.phm.ecommerce.domain.product.exception.ProductNotFoundException;

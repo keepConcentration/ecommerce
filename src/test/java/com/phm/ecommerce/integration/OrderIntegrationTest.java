@@ -9,7 +9,7 @@ import com.phm.ecommerce.domain.point.Point;
 import com.phm.ecommerce.domain.point.exception.PointErrorCode;
 import com.phm.ecommerce.domain.product.Product;
 import com.phm.ecommerce.domain.product.exception.ProductErrorCode;
-import com.phm.ecommerce.persistence.repository.*;
+import com.phm.ecommerce.infrastructure.repository.*;
 import com.phm.ecommerce.presentation.dto.request.CartItemCouponMap;
 import com.phm.ecommerce.presentation.dto.request.CreateOrderRequest;
 import com.phm.ecommerce.presentation.dto.request.DirectOrderRequest;

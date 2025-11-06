@@ -2,7 +2,7 @@ package com.phm.ecommerce.integration;
 
 import com.phm.ecommerce.domain.product.Product;
 import com.phm.ecommerce.domain.product.exception.ProductErrorCode;
-import com.phm.ecommerce.persistence.repository.ProductRepository;
+import com.phm.ecommerce.infrastructure.repository.ProductRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

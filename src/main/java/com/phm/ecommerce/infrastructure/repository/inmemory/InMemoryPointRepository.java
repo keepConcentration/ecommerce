@@ -1,7 +1,7 @@
-package com.phm.ecommerce.persistence.repository.inmemory;
+package com.phm.ecommerce.infrastructure.repository.inmemory;
 
 import com.phm.ecommerce.domain.point.Point;
-import com.phm.ecommerce.persistence.repository.PointRepository;
+import com.phm.ecommerce.infrastructure.repository.PointRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.Map;
