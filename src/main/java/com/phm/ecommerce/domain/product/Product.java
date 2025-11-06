@@ -3,7 +3,9 @@ package com.phm.ecommerce.domain.product;
 import com.phm.ecommerce.domain.common.BaseEntity;
 import com.phm.ecommerce.domain.product.exception.InsufficientStockException;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Getter
 public class Product extends BaseEntity {
 
@@ -39,9 +41,13 @@ public class Product extends BaseEntity {
 
   public void decreaseStock(Long amount) {
     if (!hasEnoughStock(amount)) {
+      log.warn("재고 부족 - productId: {}, requestedAmount: {}, currentStock: {}",
+          this.getId(), amount, this.quantity);
       throw new InsufficientStockException(this.getId(), amount, this.quantity);
     }
     this.quantity -= amount;
+    log.debug("재고 차감 - productId: {}, amount: {}, remainingStock: {}",
+        this.getId(), amount, this.quantity);
     updateTimestamp();
   }
 

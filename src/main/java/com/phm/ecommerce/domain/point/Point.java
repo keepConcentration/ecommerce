@@ -4,7 +4,9 @@ import com.phm.ecommerce.domain.common.BaseEntity;
 import com.phm.ecommerce.domain.point.exception.InsufficientPointsException;
 import com.phm.ecommerce.domain.point.exception.InvalidAmountException;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Getter
 public class Point extends BaseEntity {
 
@@ -38,9 +40,13 @@ public class Point extends BaseEntity {
   public void deduct(Long amount) {
     validateAmount(amount);
     if (!hasEnough(amount)) {
+      log.warn("포인트 부족 - userId: {}, requestedAmount: {}, currentAmount: {}",
+          this.userId, amount, this.amount);
       throw new InsufficientPointsException();
     }
     this.amount -= amount;
+    log.debug("포인트 차감 - userId: {}, deductedAmount: {}, remainingAmount: {}",
+        this.userId, amount, this.amount);
     updateTimestamp();
   }
 

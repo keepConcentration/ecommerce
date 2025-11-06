@@ -23,8 +23,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class CreateOrderUseCase {
@@ -48,6 +50,9 @@ public class CreateOrderUseCase {
       Long userCouponId) {}
 
   public Output execute(Input request) {
+    log.info("주문 생성 시작 - userId: {}, cartItemCount: {}",
+        request.userId(), request.cartItemCouponMaps().size());
+
     List<CartItem> cartItems = new ArrayList<>();
     for (CartItemCouponInfo map : request.cartItemCouponMaps()) {
       CartItem cartItem = cartItemRepository.findByIdOrThrow(map.cartItemId());
@@ -57,6 +62,7 @@ public class CreateOrderUseCase {
     }
 
     if (cartItems.isEmpty()) {
+      log.warn("주문 실패 - 장바구니가 비어있음. userId: {}", request.userId());
       throw new IllegalStateException("주문할 장바구니 아이템이 없습니다");
     }
 
@@ -104,9 +110,15 @@ public class CreateOrderUseCase {
 
       Long finalAmount = orderPricingService.calculateFinalAmount(totalAmount, totalDiscountAmount);
 
+      log.debug("주문 금액 계산 완료 - totalAmount: {}, discountAmount: {}, finalAmount: {}",
+          totalAmount, totalDiscountAmount, finalAmount);
+
       Point point = pointRepository.findByUserIdOrThrow(request.userId());
       point.deduct(finalAmount);
       savedPoint = pointRepository.save(point);
+
+      log.debug("포인트 차감 완료 - userId: {}, deductedAmount: {}, remainingPoints: {}",
+          request.userId(), finalAmount, savedPoint.getAmount());
 
       Order order = Order.create(request.userId(), totalAmount, totalDiscountAmount);
       savedOrder = orderRepository.save(order);
@@ -152,6 +164,9 @@ public class CreateOrderUseCase {
         cartItemRepository.deleteById(cartItem.getId());
       }
 
+      log.info("주문 생성 완료 - orderId: {}, userId: {}, finalAmount: {}, orderItemCount: {}",
+          savedOrder.getId(), savedOrder.getUserId(), savedOrder.getFinalAmount(), orderItemInfos.size());
+
       return new Output(
           savedOrder.getId(),
           savedOrder.getUserId(),
@@ -162,13 +177,19 @@ public class CreateOrderUseCase {
           orderItemInfos);
 
     } catch (Exception e) {
+      log.warn("주문 생성 중 오류 발생, 롤백 시작 - userId: {}, error: {}",
+          request.userId(), e.getMessage());
+
       if (!savedProductStockMap.isEmpty()) {
         for (Map.Entry<Product, Long> entry : savedProductStockMap.entrySet()) {
           entry.getKey().increaseStock(entry.getValue());
           try {
             productRepository.save(entry.getKey());
+            log.debug("재고 롤백 완료 - productId: {}, quantity: {}",
+                entry.getKey().getId(), entry.getValue());
           } catch (Exception rollbackException) {
-            // TODO: 로깅 추가
+            log.error("재고 롤백 실패 - productId: {}, quantity: {}, error: {}",
+                entry.getKey().getId(), entry.getValue(), rollbackException.getMessage());
           }
         }
       }
@@ -178,8 +199,11 @@ public class CreateOrderUseCase {
         savedPoint.charge(finalAmount);
         try {
           pointRepository.save(savedPoint);
+          log.debug("포인트 롤백 완료 - userId: {}, chargedAmount: {}",
+              request.userId(), finalAmount);
         } catch (Exception rollbackException) {
-          // TODO: 로깅 추가
+          log.error("포인트 롤백 실패 - userId: {}, chargedAmount: {}, error: {}",
+              request.userId(), finalAmount, rollbackException.getMessage());
         }
       }
 
@@ -187,8 +211,10 @@ public class CreateOrderUseCase {
         try {
           orderItemRepository.deleteByOrderId(savedOrder.getId());
           orderRepository.deleteById(savedOrder.getId());
+          log.debug("주문 데이터 롤백 완료 - orderId: {}", savedOrder.getId());
         } catch (Exception rollbackException) {
-          // TODO: 로깅 추가
+          log.error("주문 데이터 롤백 실패 - orderId: {}, error: {}",
+              savedOrder.getId(), rollbackException.getMessage());
         }
       }
 
@@ -197,8 +223,10 @@ public class CreateOrderUseCase {
           uc.rollbackUsage();
           try {
             userCouponRepository.save(uc);
+            log.debug("쿠폰 사용 롤백 완료 - userCouponId: {}", uc.getId());
           } catch (Exception rollbackException) {
-            // TODO: 로깅 추가
+            log.error("쿠폰 사용 롤백 실패 - userCouponId: {}, error: {}",
+                uc.getId(), rollbackException.getMessage());
           }
         }
       }
@@ -206,8 +234,10 @@ public class CreateOrderUseCase {
       if (savedPointTransaction != null) {
         try {
           pointTransactionRepository.deleteById(savedPointTransaction.getId());
+          log.debug("포인트 거래 내역 롤백 완료 - transactionId: {}", savedPointTransaction.getId());
         } catch (Exception rollbackException) {
-          // TODO: 로깅 추가
+          log.error("포인트 거래 내역 롤백 실패 - transactionId: {}, error: {}",
+              savedPointTransaction.getId(), rollbackException.getMessage());
         }
       }
 
@@ -215,8 +245,10 @@ public class CreateOrderUseCase {
         for (CartItem cartItem : removedCartItems) {
           try {
             cartItemRepository.save(cartItem);
+            log.debug("장바구니 아이템 복구 완료 - cartItemId: {}", cartItem.getId());
           } catch (Exception rollbackException) {
-            // TODO: 로깅 추가
+            log.error("장바구니 아이템 복구 실패 - cartItemId: {}, error: {}",
+                cartItem.getId(), rollbackException.getMessage());
           }
         }
       }

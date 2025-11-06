@@ -23,6 +23,7 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(BaseException.class)
   public ResponseEntity<ApiResponse<Void>> handleBaseException(BaseException e) {
     ErrorCode errorCode = e.getErrorCode();
+    log.info("비즈니스 예외 발생 - errorCode: {}, message: {}", errorCode.getCode(), e.getMessage());
     ErrorDetail errorDetail = new ErrorDetail(errorCode.getCode(), e.getMessage());
     ApiResponse<Void> response = ApiResponse.error(errorDetail);
     return ResponseEntity.status(errorCode.getHttpStatus()).body(response);
@@ -38,6 +39,7 @@ public class GlobalExceptionHandler {
         ? e.getBindingResult().getFieldError().getDefaultMessage()
         : CommonErrorCode.INVALID_INPUT.getMessage();
 
+    log.info("입력값 검증 실패 - field: {}, message: {}", field, message);
     ErrorCode errorCode = CommonErrorCode.INVALID_INPUT;
     ErrorDetail errorDetail = new ErrorDetail(errorCode.getCode(), message, field);
     ApiResponse<Void> response = ApiResponse.error(errorDetail);
@@ -47,6 +49,7 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(MissingServletRequestParameterException.class)
   public ResponseEntity<ApiResponse<Void>> handleMissingServletRequestParameterException(
       MissingServletRequestParameterException e) {
+    log.info("필수 파라미터 누락 - parameterName: {}", e.getParameterName());
     ErrorCode errorCode = CommonErrorCode.MISSING_PARAMETER;
     ErrorDetail errorDetail = new ErrorDetail(
         errorCode.getCode(),
@@ -59,6 +62,8 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(MethodArgumentTypeMismatchException.class)
   public ResponseEntity<ApiResponse<Void>> handleMethodArgumentTypeMismatchException(
       MethodArgumentTypeMismatchException e) {
+    log.info("타입 불일치 - parameterName: {}, requiredType: {}",
+        e.getName(), e.getRequiredType() != null ? e.getRequiredType().getSimpleName() : "unknown");
     ErrorCode errorCode = CommonErrorCode.TYPE_MISMATCH;
     ErrorDetail errorDetail = new ErrorDetail(
         errorCode.getCode(),
@@ -71,6 +76,7 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(HttpMessageNotReadableException.class)
   public ResponseEntity<ApiResponse<Void>> handleHttpMessageNotReadableException(
       HttpMessageNotReadableException e) {
+    log.info("요청 본문 읽기 실패 - error: {}", e.getMessage());
     ErrorCode errorCode = CommonErrorCode.INVALID_INPUT;
     ErrorDetail errorDetail = new ErrorDetail(
         errorCode.getCode(),
@@ -83,6 +89,7 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
   public ResponseEntity<ApiResponse<Void>> handleHttpRequestMethodNotSupportedException(
       HttpRequestMethodNotSupportedException e) {
+    log.info("지원하지 않는 HTTP 메서드 - method: {}", e.getMethod());
     ErrorCode errorCode = CommonErrorCode.METHOD_NOT_ALLOWED;
     ErrorDetail errorDetail = new ErrorDetail(
         errorCode.getCode(),

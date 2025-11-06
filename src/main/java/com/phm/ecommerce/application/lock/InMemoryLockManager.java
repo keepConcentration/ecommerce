@@ -14,6 +14,7 @@ public class InMemoryLockManager implements LockManager {
 
   private static final long LOCK_TIMEOUT_SECONDS = 10;
 
+  // TODO: 메모리 해제 기능 추가
   private final ConcurrentHashMap<String, ReentrantLock> lockMap = new ConcurrentHashMap<>();
 
   @Override

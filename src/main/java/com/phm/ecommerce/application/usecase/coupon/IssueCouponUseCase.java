@@ -7,10 +7,12 @@ import com.phm.ecommerce.domain.coupon.exception.CouponAlreadyIssuedException;
 import com.phm.ecommerce.persistence.repository.CouponRepository;
 import com.phm.ecommerce.persistence.repository.UserCouponRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class IssueCouponUseCase {
@@ -24,17 +26,23 @@ public class IssueCouponUseCase {
       Long userId) {}
 
   public Output execute(Input request) {
+    log.info("쿠폰 발급 시작 - userId: {}, couponId: {}", request.userId(), request.couponId());
     String lockKey = "coupon:" + request.couponId();
 
     return lockManager.executeWithLock(lockKey, () -> {
       boolean alreadyIssued = userCouponRepository.existsByUserIdAndCouponId(
           request.userId(), request.couponId());
       if (alreadyIssued) {
+        log.warn("쿠폰 발급 실패 - 이미 발급된 쿠폰. userId: {}, couponId: {}",
+            request.userId(), request.couponId());
         throw new CouponAlreadyIssuedException();
       }
 
       Coupon coupon = couponRepository.findByIdOrThrow(request.couponId());
       UserCoupon userCoupon = issue(request.userId(), coupon);
+
+      log.info("쿠폰 발급 완료 - userCouponId: {}, userId: {}, couponId: {}",
+          userCoupon.getId(), request.userId(), request.couponId());
 
       return new Output(
           userCoupon.getId(),
