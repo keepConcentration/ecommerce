@@ -153,8 +153,15 @@ GET /api/v1/products/1
 
 ---
 
-### 3. 판매량 기반 인기 상품 조회 (Top 5)
-최근 3일간 판매량 기준 상위 5개 상품을 조회합니다.
+### 3. 조회수/판매량 기반 인기 상품 조회 (Top 5)
+조회수와 판매량을 기반으로 가중치를 적용한 상위 5개 인기 상품을 조회합니다.
+
+**인기도 점수 계산**
+```
+인기도 점수 = (조회수 × 0.1) + (판매량 × 0.9)
+```
+- 조회수 가중치: 0.1 (10%)
+- 판매량 가중치: 0.9 (90%)
 
 **Endpoint**
 ```
@@ -175,69 +182,32 @@ GET /api/v1/products/popular
       "productId": 1,
       "name": "노트북",
       "price": 1500000,
-      "totalSales": 150
+      "quantity": 45,
+      "viewCount": 1523,
+      "salesCount": 150,
+      "popularityScore": 152.3,
+      "createdAt": "2025-01-15T10:00:00",
+      "updatedAt": "2025-01-20T15:30:00"
     },
     {
       "productId": 3,
       "name": "키보드",
       "price": 120000,
-      "totalSales": 98
+      "quantity": 80,
+      "viewCount": 842,
+      "salesCount": 98,
+      "popularityScore": 172.4,
+      "createdAt": "2025-01-15T10:00:00",
+      "updatedAt": "2025-01-20T15:30:00"
     },
     {
       "productId": 2,
       "name": "마우스",
       "price": 35000,
-      "totalSales": 75
-    }
-  ],
-  "error": null
-}
-```
-
----
-
-### 4. 조회수 기반 인기 상품 조회 (Top 10)
-조회수 기준 상위 10개 상품을 조회합니다.
-
-**Endpoint**
-```
-GET /products/most-viewed
-```
-
-**Request**
-```http
-GET /api/v1/products/most-viewed
-```
-
-**Response** (200 OK)
-```json
-{
-  "status": true,
-  "data": [
-    {
-      "productId": 1,
-      "name": "노트북",
-      "price": 1500000,
-      "quantity": 50,
-      "viewCount": 15230,
-      "createdAt": "2025-01-15T10:00:00",
-      "updatedAt": "2025-01-20T15:30:00"
-    },
-    {
-      "productId": 5,
-      "name": "모니터",
-      "price": 450000,
-      "quantity": 30,
-      "viewCount": 12850,
-      "createdAt": "2025-01-15T10:00:00",
-      "updatedAt": "2025-01-20T15:30:00"
-    },
-    {
-      "productId": 3,
-      "name": "키보드",
-      "price": 120000,
-      "quantity": 100,
-      "viewCount": 9870,
+      "quantity": 120,
+      "viewCount": 650,
+      "salesCount": 75,
+      "popularityScore": 132.5,
       "createdAt": "2025-01-15T10:00:00",
       "updatedAt": "2025-01-20T15:30:00"
     }
@@ -245,6 +215,12 @@ GET /api/v1/products/most-viewed
   "error": null
 }
 ```
+
+**비즈니스 로직**
+- 상품 조회 시 조회수가 1 증가합니다
+- 주문 완료 시 판매량이 주문 수량만큼 증가합니다
+- 주문 실패 시 판매량은 롤백됩니다
+- 인기도 점수는 높은 순서대로 정렬되어 반환됩니다
 
 ---
 

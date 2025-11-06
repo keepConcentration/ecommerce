@@ -49,6 +49,7 @@ erDiagram
         bigint price
         bigint quantity
         bigint view_count
+        bigint sales_count
         datetime created_at
         datetime updated_at
     }
