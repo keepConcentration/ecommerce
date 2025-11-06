@@ -6,6 +6,7 @@ import com.phm.ecommerce.domain.coupon.UserCoupon;
 import com.phm.ecommerce.domain.order.Order;
 import com.phm.ecommerce.domain.order.OrderItem;
 import com.phm.ecommerce.domain.order.OrderPricingService;
+import com.phm.ecommerce.domain.order.exception.EmptyCartException;
 import com.phm.ecommerce.domain.point.Point;
 import com.phm.ecommerce.domain.point.PointTransaction;
 import com.phm.ecommerce.domain.product.Product;
@@ -63,7 +64,7 @@ public class CreateOrderUseCase {
 
     if (cartItems.isEmpty()) {
       log.warn("주문 실패 - 장바구니가 비어있음. userId: {}", request.userId());
-      throw new IllegalStateException("주문할 장바구니 아이템이 없습니다");
+      throw new EmptyCartException();
     }
 
     Map<Long, Long> cartItemCouponMap = new HashMap<>();

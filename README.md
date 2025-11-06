@@ -276,7 +276,7 @@ sequenceDiagram
     end
 
     alt 장바구니가 비어있음
-        UseCase-->>Controller: IllegalStateException
+        UseCase-->>Controller: EmptyCartException
         Controller-->>Client: 400 Bad Request
     end
 

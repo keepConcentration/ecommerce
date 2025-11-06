@@ -981,6 +981,7 @@ GET /api/v1/transactions?userId={userId}
 | `INSUFFICIENT_POINTS` | 409 | 포인트 잔액 부족 |
 | `COUPON_SOLD_OUT` | 409 | 쿠폰 소진 |
 | `COUPON_ALREADY_ISSUED` | 409 | 이미 발급받은 쿠폰 |
+| `EMPTY_CART` | 400 | 주문할 장바구니 아이템이 없음 |
 | `COUPON_EXPIRED` | 400 | 만료된 쿠폰 |
 | `COUPON_ALREADY_USED` | 400 | 이미 사용된 쿠폰 |
 | `INVALID_AMOUNT` | 400 | 유효하지 않은 금액 |
