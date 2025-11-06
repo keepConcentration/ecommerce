@@ -259,15 +259,8 @@ sequenceDiagram
     actor Client
     participant Controller as OrderController
     participant UseCase as CreateOrderUseCase
-    participant CartRepo as CartItemRepository
-    participant ProductRepo as ProductRepository
-    participant UserCouponRepo as UserCouponRepository
-    participant CouponRepo as CouponRepository
+    participant Repository as Repositories
     participant PricingService as OrderPricingService
-    participant PointRepo as PointRepository
-    participant OrderRepo as OrderRepository
-    participant OrderItemRepo as OrderItemRepository
-    participant PointTxRepo as PointTransactionRepository
 
     Client->>Controller: POST /orders<br/>{userId, cartItemCouponMaps}
     activate Controller
@@ -277,8 +270,8 @@ sequenceDiagram
 
     Note over UseCase: 1. 장바구니 아이템 조회 및 검증
     loop 각 cartItemId
-        UseCase->>CartRepo: findByIdOrThrow(cartItemId)
-        CartRepo-->>UseCase: CartItem
+        UseCase->>Repository: findByIdOrThrow(cartItemId)
+        Repository-->>UseCase: CartItem
         UseCase->>UseCase: validateOwnership(userId)
     end
 
@@ -289,13 +282,13 @@ sequenceDiagram
 
     Note over UseCase: 2. 재고 차감 및 판매량 증가 (Try 블록)
     loop 각 장바구니 아이템
-        UseCase->>ProductRepo: findByIdOrThrow(productId)
-        ProductRepo-->>UseCase: Product
+        UseCase->>Repository: findByIdOrThrow(productId)
+        Repository-->>UseCase: Product
 
         UseCase->>UseCase: product.decreaseStock(quantity)
         UseCase->>UseCase: product.increaseSalesCount(quantity)
-        UseCase->>ProductRepo: save(product)
-        ProductRepo-->>UseCase: savedProduct
+        UseCase->>Repository: save(product)
+        Repository-->>UseCase: savedProduct
 
         alt 재고 부족
             UseCase->>UseCase: 재고/판매량 롤백
@@ -305,10 +298,10 @@ sequenceDiagram
 
         Note over UseCase: 3. 쿠폰 검증 및 할인 계산
         opt 쿠폰 사용
-            UseCase->>UserCouponRepo: findByIdOrThrow(userCouponId)
-            UserCouponRepo-->>UseCase: UserCoupon
-            UseCase->>CouponRepo: findByIdOrThrow(couponId)
-            CouponRepo-->>UseCase: Coupon
+            UseCase->>Repository: findByIdOrThrow(userCouponId)
+            Repository-->>UseCase: UserCoupon
+            UseCase->>Repository: findByIdOrThrow(couponId)
+            Repository-->>UseCase: Coupon
             UseCase->>UseCase: userCoupon.calculateDiscount(coupon)
 
             alt 쿠폰 만료 또는 사용됨
@@ -328,11 +321,11 @@ sequenceDiagram
     PricingService-->>UseCase: finalAmount
 
     Note over UseCase: 5. 포인트 차감
-    UseCase->>PointRepo: findByUserIdOrThrow(userId)
-    PointRepo-->>UseCase: Point
+    UseCase->>Repository: findByUserIdOrThrow(userId)
+    Repository-->>UseCase: Point
     UseCase->>UseCase: point.deduct(finalAmount)
-    UseCase->>PointRepo: save(point)
-    PointRepo-->>UseCase: savedPoint
+    UseCase->>Repository: save(point)
+    Repository-->>UseCase: savedPoint
 
     alt 포인트 부족
         UseCase->>UseCase: 재고/판매량/포인트 롤백
@@ -342,30 +335,30 @@ sequenceDiagram
 
     Note over UseCase: 6. 주문 생성
     UseCase->>UseCase: Order.create(userId, totalAmount, discountAmount)
-    UseCase->>OrderRepo: save(order)
-    OrderRepo-->>UseCase: savedOrder
+    UseCase->>Repository: save(order)
+    Repository-->>UseCase: savedOrder
 
     Note over UseCase: 7. 주문 아이템 생성 및 쿠폰 사용 처리
     loop 각 orderItemData
         UseCase->>UseCase: OrderItem.create(...)
-        UseCase->>OrderItemRepo: save(orderItem)
-        OrderItemRepo-->>UseCase: savedOrderItem
+        UseCase->>Repository: save(orderItem)
+        Repository-->>UseCase: savedOrderItem
 
         opt 쿠폰 사용
             UseCase->>UseCase: userCoupon.use()
-            UseCase->>UserCouponRepo: save(userCoupon)
-            UserCouponRepo-->>UseCase: savedUserCoupon
+            UseCase->>Repository: save(userCoupon)
+            Repository-->>UseCase: savedUserCoupon
         end
     end
 
     Note over UseCase: 8. 포인트 거래 내역 생성
     UseCase->>UseCase: PointTransaction.createDeduction(...)
-    UseCase->>PointTxRepo: save(pointTransaction)
-    PointTxRepo-->>UseCase: savedPointTransaction
+    UseCase->>Repository: save(pointTransaction)
+    Repository-->>UseCase: savedPointTransaction
 
     Note over UseCase: 9. 주문된 장바구니 아이템 삭제
     loop 각 cartItem
-        UseCase->>CartRepo: deleteById(cartItemId)
+        UseCase->>Repository: deleteById(cartItemId)
     end
 
     UseCase-->>Controller: Output(orderResponse)
@@ -385,8 +378,7 @@ sequenceDiagram
     participant Controller as CouponController
     participant UseCase as IssueCouponUseCase
     participant LockManager as LockManager
-    participant UserCouponRepo as UserCouponRepository
-    participant CouponRepo as CouponRepository
+    participant Repository as Repositories
 
     Client->>Controller: POST /coupons/{couponId}/issue<br/>{userId}
     activate Controller
@@ -409,8 +401,8 @@ sequenceDiagram
     Note over LockManager: ✅ 락 획득 성공 - 임계 영역 진입
 
     Note over UseCase: 1. 중복 발급 확인
-    LockManager->>UserCouponRepo: existsByUserIdAndCouponId(userId, couponId)
-    UserCouponRepo-->>LockManager: boolean
+    LockManager->>Repository: existsByUserIdAndCouponId(userId, couponId)
+    Repository-->>LockManager: boolean
 
     alt 이미 발급받음
         LockManager->>LockManager: 락 해제
@@ -420,8 +412,8 @@ sequenceDiagram
     end
 
     Note over UseCase: 2. 쿠폰 조회
-    LockManager->>CouponRepo: findByIdOrThrow(couponId)
-    CouponRepo-->>LockManager: Coupon
+    LockManager->>Repository: findByIdOrThrow(couponId)
+    Repository-->>LockManager: Coupon
 
     alt 쿠폰이 존재하지 않음
         LockManager->>LockManager: 락 해제
@@ -443,12 +435,12 @@ sequenceDiagram
 
     Note over UseCase: 4. 만료일시 계산 및 사용자 쿠폰 생성
     LockManager->>LockManager: UserCoupon.issue(userId, couponId, validDays)
-    LockManager->>UserCouponRepo: save(userCoupon)
-    UserCouponRepo-->>LockManager: savedUserCoupon
+    LockManager->>Repository: save(userCoupon)
+    Repository-->>LockManager: savedUserCoupon
 
     Note over UseCase: 5. 쿠폰 상태 저장
-    LockManager->>CouponRepo: save(coupon)
-    CouponRepo-->>LockManager: savedCoupon
+    LockManager->>Repository: save(coupon)
+    Repository-->>LockManager: savedCoupon
 
     LockManager->>LockManager: 락 해제
     Note over LockManager: ✅ 임계 영역 종료
@@ -472,14 +464,8 @@ sequenceDiagram
     actor Client
     participant Controller as OrderController
     participant UseCase as CreateDirectOrderUseCase
-    participant ProductRepo as ProductRepository
-    participant UserCouponRepo as UserCouponRepository
-    participant CouponRepo as CouponRepository
+    participant Repository as Repositories
     participant PricingService as OrderPricingService
-    participant PointRepo as PointRepository
-    participant OrderRepo as OrderRepository
-    participant OrderItemRepo as OrderItemRepository
-    participant PointTxRepo as PointTransactionRepository
 
     Client->>Controller: POST /orders/direct<br/>{userId, productId, quantity, userCouponId}
     activate Controller
@@ -490,13 +476,13 @@ sequenceDiagram
     Note over UseCase: Try 블록 시작
 
     Note over UseCase: 1. 상품 조회, 재고 차감 및 판매량 증가
-    UseCase->>ProductRepo: findByIdOrThrow(productId)
-    ProductRepo-->>UseCase: Product
+    UseCase->>Repository: findByIdOrThrow(productId)
+    Repository-->>UseCase: Product
 
     UseCase->>UseCase: product.decreaseStock(quantity)
     UseCase->>UseCase: product.increaseSalesCount(quantity)
-    UseCase->>ProductRepo: save(product)
-    ProductRepo-->>UseCase: savedProduct
+    UseCase->>Repository: save(product)
+    Repository-->>UseCase: savedProduct
 
     alt 상품 없음 또는 재고 부족
         UseCase-->>Controller: ProductNotFoundException or InsufficientStockException
@@ -505,10 +491,10 @@ sequenceDiagram
 
     Note over UseCase: 2. 쿠폰 검증 및 할인 계산
     opt 쿠폰 사용
-        UseCase->>UserCouponRepo: findByIdOrThrow(userCouponId)
-        UserCouponRepo-->>UseCase: UserCoupon
-        UseCase->>CouponRepo: findByIdOrThrow(couponId)
-        CouponRepo-->>UseCase: Coupon
+        UseCase->>Repository: findByIdOrThrow(userCouponId)
+        Repository-->>UseCase: UserCoupon
+        UseCase->>Repository: findByIdOrThrow(couponId)
+        Repository-->>UseCase: Coupon
         UseCase->>UseCase: userCoupon.calculateDiscount(coupon)
 
         alt 쿠폰 만료 또는 사용됨
@@ -525,11 +511,11 @@ sequenceDiagram
     PricingService-->>UseCase: finalAmount
 
     Note over UseCase: 4. 포인트 차감
-    UseCase->>PointRepo: findByUserIdOrThrow(userId)
-    PointRepo-->>UseCase: Point
+    UseCase->>Repository: findByUserIdOrThrow(userId)
+    Repository-->>UseCase: Point
     UseCase->>UseCase: point.deduct(finalAmount)
-    UseCase->>PointRepo: save(point)
-    PointRepo-->>UseCase: savedPoint
+    UseCase->>Repository: save(point)
+    Repository-->>UseCase: savedPoint
 
     alt 포인트 부족
         UseCase->>UseCase: 재고/판매량/포인트 롤백
@@ -539,25 +525,25 @@ sequenceDiagram
 
     Note over UseCase: 5. 주문 생성
     UseCase->>UseCase: Order.create(userId, totalAmount, discountAmount)
-    UseCase->>OrderRepo: save(order)
-    OrderRepo-->>UseCase: savedOrder
+    UseCase->>Repository: save(order)
+    Repository-->>UseCase: savedOrder
 
     Note over UseCase: 6. 주문 아이템 생성
     UseCase->>UseCase: OrderItem.create(...)
-    UseCase->>OrderItemRepo: save(orderItem)
-    OrderItemRepo-->>UseCase: savedOrderItem
+    UseCase->>Repository: save(orderItem)
+    Repository-->>UseCase: savedOrderItem
 
     Note over UseCase: 7. 쿠폰 사용 처리
     opt 쿠폰 사용
         UseCase->>UseCase: userCoupon.use()
-        UseCase->>UserCouponRepo: save(userCoupon)
-        UserCouponRepo-->>UseCase: savedUserCoupon
+        UseCase->>Repository: save(userCoupon)
+        Repository-->>UseCase: savedUserCoupon
     end
 
     Note over UseCase: 8. 포인트 거래 내역 생성
     UseCase->>UseCase: PointTransaction.createDeduction(...)
-    UseCase->>PointTxRepo: save(pointTransaction)
-    PointTxRepo-->>UseCase: savedPointTransaction
+    UseCase->>Repository: save(pointTransaction)
+    Repository-->>UseCase: savedPointTransaction
 
     UseCase-->>Controller: Output(orderResponse)
     deactivate UseCase
