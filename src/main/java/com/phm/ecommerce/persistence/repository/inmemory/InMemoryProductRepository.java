@@ -22,7 +22,8 @@ public class InMemoryProductRepository implements ProductRepository {
               product.getName(),
               product.getPrice(),
               product.getQuantity(),
-              product.getViewCount());
+              product.getViewCount(),
+              product.getSalesCount());
       store.put(newProduct.getId(), newProduct);
       return newProduct;
     }
@@ -49,9 +50,11 @@ public class InMemoryProductRepository implements ProductRepository {
   }
 
   @Override
-  public List<Product> findTopByViewCount(int limit) {
+  public List<Product> findPopularProducts(int limit, Double viewWeight, Double salesWeight) {
     return store.values().stream()
-        .sorted(Comparator.comparing(Product::getViewCount).reversed())
+        .sorted(Comparator.comparing(
+            (Product p) -> p.calculatePopularityScore(viewWeight, salesWeight)
+        ).reversed())
         .limit(limit)
         .toList();
   }

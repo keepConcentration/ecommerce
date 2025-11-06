@@ -1,10 +1,8 @@
 package com.phm.ecommerce.integration;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.phm.ecommerce.domain.product.Product;
 import com.phm.ecommerce.domain.product.exception.ProductErrorCode;
 import com.phm.ecommerce.persistence.repository.ProductRepository;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,15 +27,7 @@ class ProductIntegrationTest {
   private MockMvc mockMvc;
 
   @Autowired
-  private ObjectMapper objectMapper;
-
-  @Autowired
   private ProductRepository productRepository;
-
-  @BeforeEach
-  void setUp() {
-    // 테스트 데이터 초기화 - InMemory Repository이므로 매번 초기화됨
-  }
 
   @Test
   @DisplayName("상품 목록 조회 - 성공")
@@ -103,18 +93,6 @@ class ProductIntegrationTest {
   void getPopularProducts_Success() throws Exception {
     // when & then
     mockMvc.perform(get("/api/v1/products/popular")
-            .contentType(MediaType.APPLICATION_JSON))
-        .andDo(print())
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$.status").value(true))
-        .andExpect(jsonPath("$.data").isArray());
-  }
-
-  @Test
-  @DisplayName("조회수 높은 상품 조회 - 성공")
-  void getMostViewedProducts_Success() throws Exception {
-    // when & then
-    mockMvc.perform(get("/api/v1/products/most-viewed")
             .contentType(MediaType.APPLICATION_JSON))
         .andDo(print())
         .andExpect(status().isOk())

@@ -29,7 +29,8 @@ class ProductTest {
         () -> assertThat(product.getName()).isEqualTo(name),
         () -> assertThat(product.getPrice()).isEqualTo(price),
         () -> assertThat(product.getQuantity()).isEqualTo(quantity),
-        () -> assertThat(product.getViewCount()).isEqualTo(0L)
+        () -> assertThat(product.getViewCount()).isEqualTo(0L),
+        () -> assertThat(product.getSalesCount()).isEqualTo(0L)
     );
   }
 
@@ -122,5 +123,102 @@ class ProductTest {
         () -> assertThat(product.hasEnoughStock(100L)).isTrue(),
         () -> assertThat(product.hasEnoughStock(150L)).isFalse()
     );
+  }
+
+  @Test
+  @DisplayName("판매량 증가 - 성공")
+  void increaseSalesCount_Success() {
+    // given
+    Product product = Product.create("상품", 10000L, 100L);
+    Long initialSalesCount = product.getSalesCount();
+
+    // when
+    product.increaseSalesCount(10L);
+
+    // then
+    assertThat(product.getSalesCount()).isEqualTo(initialSalesCount + 10L);
+
+    // when
+    product.increaseSalesCount(5L);
+
+    // then
+    assertThat(product.getSalesCount()).isEqualTo(initialSalesCount + 15L);
+  }
+
+  @Test
+  @DisplayName("판매량 감소 - 성공")
+  void decreaseSalesCount_Success() {
+    // given
+    Product product = Product.create("상품", 10000L, 100L);
+    product.increaseSalesCount(50L);
+
+    // when
+    product.decreaseSalesCount(20L);
+
+    // then
+    assertThat(product.getSalesCount()).isEqualTo(30L);
+  }
+
+  @Test
+  @DisplayName("판매량 감소 - 경계값 테스트 (정확히 0)")
+  void decreaseSalesCount_ExactZero() {
+    // given
+    Product product = Product.create("상품", 10000L, 100L);
+    product.increaseSalesCount(30L);
+
+    // when
+    product.decreaseSalesCount(30L);
+
+    // then
+    assertThat(product.getSalesCount()).isEqualTo(0L);
+  }
+
+  @Test
+  @DisplayName("판매량 감소 - 판매량보다 큰 값 감소")
+  void decreaseSalesCount_MoreThanSalesCount() {
+    // given
+    Product product = Product.create("상품", 10000L, 100L);
+    product.increaseSalesCount(20L);
+
+    // when
+    product.decreaseSalesCount(50L);
+
+    // then
+    assertThat(product.getSalesCount()).isEqualTo(0L);
+  }
+
+  @Test
+  @DisplayName("인기도 점수 계산 - 가중치 적용")
+  void calculatePopularityScore() {
+    // given
+    Product product = Product.create("상품", 10000L, 100L);
+    product.increaseViewCount();
+    product.increaseViewCount();
+    product.increaseSalesCount(10L);
+
+    // when
+    Double score1 = product.calculatePopularityScore(0.3, 0.7);
+    Double score2 = product.calculatePopularityScore(0.5, 0.5);
+    Double score3 = product.calculatePopularityScore(1.0, 0.0);
+
+    // then
+    assertAll(
+        () -> assertThat(score1).isEqualTo(2 * 0.3 + 10 * 0.7), // 7.6
+        () -> assertThat(score2).isEqualTo(2 * 0.5 + 10 * 0.5), // 6.0
+        () -> assertThat(score3).isEqualTo(2 * 1.0 + 10 * 0.0)  // 2.0
+    );
+  }
+
+  @Test
+  @DisplayName("인기도 점수 계산 - 조회수와 판매량이 모두 0")
+  void calculatePopularityScore_ZeroValues() {
+    // given
+    Product product = Product.create("상품", 10000L, 100L);
+
+    // when
+    Double score = product.calculatePopularityScore(0.3, 0.7);
+
+    // then
+    assertThat(score).isEqualTo(0.0);
   }
 }

@@ -88,6 +88,7 @@ public class CreateOrderUseCase {
       for (CartItem cartItem : cartItems) {
         Product product = productRepository.findByIdOrThrow(cartItem.getProductId());
         product.decreaseStock(cartItem.getQuantity());
+        product.increaseSalesCount(cartItem.getQuantity());
         Product savedProduct = productRepository.save(product);
         savedProductStockMap.put(savedProduct, cartItem.getQuantity());
 
@@ -183,12 +184,13 @@ public class CreateOrderUseCase {
       if (!savedProductStockMap.isEmpty()) {
         for (Map.Entry<Product, Long> entry : savedProductStockMap.entrySet()) {
           entry.getKey().increaseStock(entry.getValue());
+          entry.getKey().decreaseSalesCount(entry.getValue());
           try {
             productRepository.save(entry.getKey());
-            log.debug("재고 롤백 완료 - productId: {}, quantity: {}",
+            log.debug("재고 및 판매량 롤백 완료 - productId: {}, quantity: {}",
                 entry.getKey().getId(), entry.getValue());
           } catch (Exception rollbackException) {
-            log.error("재고 롤백 실패 - productId: {}, quantity: {}, error: {}",
+            log.error("재고 및 판매량 롤백 실패 - productId: {}, quantity: {}, error: {}",
                 entry.getKey().getId(), entry.getValue(), rollbackException.getMessage());
           }
         }

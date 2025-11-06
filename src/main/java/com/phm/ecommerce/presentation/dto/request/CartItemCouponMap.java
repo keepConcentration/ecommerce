@@ -11,8 +11,7 @@ public record CartItemCouponMap(
     @NotNull(message = "장바구니 아이템 ID는 필수입니다")
     Long cartItemId,
 
-    @Schema(description = "사용할 쿠폰 ID", example = "10", requiredMode = RequiredMode.REQUIRED)
-    @NotNull(message = "사용자 쿠폰 ID는 필수입니다")
+    @Schema(description = "사용할 쿠폰 ID (쿠폰 미사용 시 null)", example = "10")
     Long userCouponId) {
 
 }

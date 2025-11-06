@@ -48,7 +48,9 @@ public interface ProductApi {
           Long productId);
 
   @GetMapping("/popular")
-  @Operation(summary = "인기 상품 조회", description = "최근 3일간 판매량 기준 상위 5개 상품을 조회합니다.")
+  @Operation(
+      summary = "인기 상품 조회",
+      description = "조회수와 판매량에 가중치를 적용한 인기 상품 목록을 조회합니다. ")
   @ApiResponses(
       value = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
@@ -57,15 +59,4 @@ public interface ProductApi {
             content = @Content(schema = @Schema(implementation = ApiResponse.class)))
       })
   ApiResponse<List<PopularProductResponse>> getPopularProducts();
-
-  @GetMapping("/most-viewed")
-  @Operation(summary = "조회수 기반 인기 상품 조회", description = "조회수 기준 상위 10개 상품을 조회합니다.")
-  @ApiResponses(
-      value = {
-        @io.swagger.v3.oas.annotations.responses.ApiResponse(
-            responseCode = "200",
-            description = "성공",
-            content = @Content(schema = @Schema(implementation = ApiResponse.class)))
-      })
-  ApiResponse<List<ProductResponse>> getMostViewedProducts();
 }

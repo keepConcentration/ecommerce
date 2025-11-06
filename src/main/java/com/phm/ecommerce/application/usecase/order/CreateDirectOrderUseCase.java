@@ -52,6 +52,7 @@ public class CreateDirectOrderUseCase {
     try {
       Product product = productRepository.findByIdOrThrow(request.productId());
       product.decreaseStock(request.quantity());
+      product.increaseSalesCount(request.quantity());
       savedProduct = productRepository.save(product);
 
       log.debug("재고 차감 완료 - productId: {}, quantity: {}, remainingStock: {}",
@@ -131,12 +132,13 @@ public class CreateDirectOrderUseCase {
           request.userId(), e.getMessage());
       if (savedProduct != null) {
         savedProduct.increaseStock(request.quantity());
+        savedProduct.decreaseSalesCount(request.quantity());
         try {
           productRepository.save(savedProduct);
-          log.debug("재고 롤백 완료 - productId: {}, quantity: {}",
+          log.debug("재고 및 판매량 롤백 완료 - productId: {}, quantity: {}",
               savedProduct.getId(), request.quantity());
         } catch (Exception rollbackException) {
-          log.error("재고 롤백 실패 - productId: {}, quantity: {}, error: {}",
+          log.error("재고 및 판매량 롤백 실패 - productId: {}, quantity: {}, error: {}",
               savedProduct.getId(), request.quantity(), rollbackException.getMessage());
         }
       }

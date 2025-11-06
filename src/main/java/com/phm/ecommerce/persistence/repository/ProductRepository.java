@@ -20,7 +20,7 @@ public interface ProductRepository {
 
   List<Product> findAllByIds(List<Long> ids);
 
-  List<Product> findTopByViewCount(int limit);
+  List<Product> findPopularProducts(int limit, Double viewWeight, Double salesWeight);
 
   void deleteById(Long id);
 }
