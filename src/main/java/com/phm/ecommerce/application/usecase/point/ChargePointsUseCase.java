@@ -33,7 +33,6 @@ public class ChargePointsUseCase {
         });
 
     point.charge(request.amount());
-
     point = pointRepository.save(point);
 
     PointTransaction transaction = PointTransaction.createCharge(point.getId(), request.amount());
