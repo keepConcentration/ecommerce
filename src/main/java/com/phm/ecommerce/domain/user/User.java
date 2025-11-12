@@ -1,8 +1,12 @@
 package com.phm.ecommerce.domain.user;
 
 import com.phm.ecommerce.domain.common.BaseEntity;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 import lombok.Getter;
 
+@Entity
+@Table(name = "users")
 @Getter
 public class User extends BaseEntity {
 

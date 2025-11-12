@@ -2,17 +2,31 @@ package com.phm.ecommerce.domain.product;
 
 import com.phm.ecommerce.domain.common.BaseEntity;
 import com.phm.ecommerce.domain.product.exception.InsufficientStockException;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+@Entity
+@Table(name = "products")
 @Slf4j
 @Getter
 public class Product extends BaseEntity {
 
+  @Column(nullable = false)
   private String name;
+
+  @Column(nullable = false)
   private Long price;
+
+  @Column(nullable = false)
   private Long quantity;
+
+  @Column(nullable = false)
   private Long viewCount;
+
+  @Column(nullable = false)
   private Long salesCount;
 
   protected Product() {
@@ -38,7 +52,6 @@ public class Product extends BaseEntity {
 
   public void increaseViewCount() {
     this.viewCount++;
-    updateTimestamp();
   }
 
   public void decreaseStock(Long stock) {
@@ -50,12 +63,10 @@ public class Product extends BaseEntity {
     this.quantity -= stock;
     log.debug("재고 차감 - productId: {}, stock: {}, remainingStock: {}",
         this.getId(), stock, this.quantity);
-    updateTimestamp();
   }
 
   public void increaseStock(Long stock) {
     this.quantity += stock;
-    updateTimestamp();
   }
 
   public boolean hasEnoughStock(Long requestedQuantity) {
@@ -66,7 +77,6 @@ public class Product extends BaseEntity {
     this.salesCount += count;
     log.debug("판매량 증가 - productId: {}, count: {}, totalSalesCount: {}",
         this.getId(), count, this.salesCount);
-    updateTimestamp();
   }
 
   public void decreaseSalesCount(Long count) {
@@ -79,7 +89,6 @@ public class Product extends BaseEntity {
           this.getId(), count, this.salesCount);
       this.salesCount = 0L;
     }
-    updateTimestamp();
   }
 
   public Double calculatePopularityScore(Double viewWeight, Double salesWeight) {

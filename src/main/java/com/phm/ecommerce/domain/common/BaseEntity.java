@@ -1,34 +1,39 @@
 package com.phm.ecommerce.domain.common;
 
+import jakarta.persistence.*;
 import lombok.Getter;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
 
 @Getter
+@MappedSuperclass
+@EntityListeners(AuditingEntityListener.class)
 public abstract class BaseEntity {
 
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
   protected Long id;
+
+  @CreatedDate
+  @Column(updatable = false)
   protected LocalDateTime createdAt;
+
+  @LastModifiedDate
   protected LocalDateTime updatedAt;
 
   protected BaseEntity() {
-    this.createdAt = LocalDateTime.now();
-    this.updatedAt = LocalDateTime.now();
   }
 
   protected BaseEntity(Long id) {
     this.id = id;
-    this.createdAt = LocalDateTime.now();
-    this.updatedAt = LocalDateTime.now();
   }
 
   protected void setId(Long id) {
     this.id = id;
-  }
-
-  protected void updateTimestamp() {
-    this.updatedAt = LocalDateTime.now();
   }
 
   @Override
