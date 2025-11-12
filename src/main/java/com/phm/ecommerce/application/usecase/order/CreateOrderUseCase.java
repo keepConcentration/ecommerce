@@ -281,17 +281,7 @@ public class CreateOrderUseCase {
       Long userCouponId) {}
 
   // 내부 데이터 클래스
-  private static class OrderItemData {
-    final CartItem cartItem;
-    final Product product;
-    final UserCoupon userCoupon;
-    final Long discountAmount;
+    private record OrderItemData(CartItem cartItem, Product product, UserCoupon userCoupon, Long discountAmount) {
 
-    OrderItemData(CartItem cartItem, Product product, UserCoupon userCoupon, Long discountAmount) {
-      this.cartItem = cartItem;
-      this.product = product;
-      this.userCoupon = userCoupon;
-      this.discountAmount = discountAmount;
-    }
   }
 }
