@@ -6,12 +6,13 @@ import com.phm.ecommerce.domain.coupon.UserCoupon;
 import com.phm.ecommerce.domain.coupon.exception.CouponSoldOutException;
 import com.phm.ecommerce.infrastructure.repository.CouponRepository;
 import com.phm.ecommerce.infrastructure.repository.UserCouponRepository;
+import com.phm.ecommerce.support.TestContainerSupport;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -22,9 +23,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+@Transactional
 @DisplayName("쿠폰 동시 발급 통합 테스트")
-class CouponConcurrencyIntegrationTest {
+class CouponConcurrencyIntegrationTest extends TestContainerSupport {
 
   @Autowired
   private IssueCouponUseCase issueCouponUseCase;
