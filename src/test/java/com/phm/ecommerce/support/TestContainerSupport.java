@@ -3,18 +3,18 @@ package com.phm.ecommerce.support;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.MySQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
-@Testcontainers
 public abstract class TestContainerSupport {
 
-  @Container
-  protected static final MySQLContainer<?> MYSQL_CONTAINER = new MySQLContainer<>("mysql:8.0")
-      .withDatabaseName("testdb")
-      .withUsername("test")
-      .withPassword("test")
-      .withReuse(true);
+  private static final MySQLContainer<?> MYSQL_CONTAINER;
+
+  static {
+    MYSQL_CONTAINER = new MySQLContainer<>("mysql:8.0")
+        .withDatabaseName("testdb")
+        .withUsername("test")
+        .withPassword("test");
+    MYSQL_CONTAINER.start();
+  }
 
   @DynamicPropertySource
   static void overrideProperties(DynamicPropertyRegistry registry) {
