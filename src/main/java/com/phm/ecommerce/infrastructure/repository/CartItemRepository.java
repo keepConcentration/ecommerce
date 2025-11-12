@@ -1,17 +1,13 @@
 package com.phm.ecommerce.infrastructure.repository;
 
-
 import com.phm.ecommerce.domain.cart.CartItem;
 import com.phm.ecommerce.domain.cart.exception.CartItemNotFoundException;
+import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 import java.util.Optional;
 
-public interface CartItemRepository {
-
-  CartItem save(CartItem cartItem);
-
-  Optional<CartItem> findById(Long id);
+public interface CartItemRepository extends JpaRepository<CartItem, Long> {
 
   default CartItem findByIdOrThrow(Long id) {
     return findById(id).orElseThrow(CartItemNotFoundException::new);
@@ -20,8 +16,6 @@ public interface CartItemRepository {
   Optional<CartItem> findByUserIdAndProductId(Long userId, Long productId);
 
   List<CartItem> findByUserId(Long userId);
-
-  void deleteById(Long id);
 
   void deleteByUserId(Long userId);
 }

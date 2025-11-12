@@ -1,23 +1,19 @@
 package com.phm.ecommerce.infrastructure.repository;
 
-
 import com.phm.ecommerce.domain.coupon.Coupon;
 import com.phm.ecommerce.domain.coupon.exception.CouponNotFoundException;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
-import java.util.Optional;
 
-public interface CouponRepository {
-
-  Coupon save(Coupon coupon);
-
-  Optional<Coupon> findById(Long id);
+public interface CouponRepository extends JpaRepository<Coupon, Long> {
 
   default Coupon findByIdOrThrow(Long id) {
     return findById(id).orElseThrow(CouponNotFoundException::new);
   }
 
-  List<Coupon> findAllByIds(List<Long> ids);
-
-  void deleteById(Long id);
+  @Query("SELECT c FROM Coupon c WHERE c.id IN :ids")
+  List<Coupon> findAllByIds(@Param("ids") List<Long> ids);
 }
