@@ -17,7 +17,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
   @Query("SELECT p FROM Product p WHERE p.id IN :ids")
   List<Product> findAllByIds(@Param("ids") List<Long> ids);
 
-  @Query("SELECT p FROM Product p ORDER BY (p.viewCount * :viewWeight + p.salesCount * :salesWeight) DESC")
+  @Query(value = "SELECT * FROM products p ORDER BY (p.view_count * :viewWeight + p.sales_count * :salesWeight) DESC", nativeQuery = true)
   List<Product> findTopByPopularity(@Param("viewWeight") Double viewWeight,
                                      @Param("salesWeight") Double salesWeight);
 
