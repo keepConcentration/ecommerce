@@ -1,14 +1,7 @@
 package com.phm.ecommerce.infrastructure.repository;
 
-
 import com.phm.ecommerce.domain.order.Order;
-import java.util.Optional;
+import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface OrderRepository {
-
-  Order save(Order order);
-
-  Optional<Order> findById(Long id);
-
-  void deleteById(Long id);
+public interface OrderRepository extends JpaRepository<Order, Long> {
 }

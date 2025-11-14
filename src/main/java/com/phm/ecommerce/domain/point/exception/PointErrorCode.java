@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 @Getter
 @RequiredArgsConstructor
 public enum PointErrorCode implements ErrorCode {
+  POINT_NOT_FOUND("POINT_NOT_FOUND", "포인트를 찾을 수 없습니다", HttpStatus.NOT_FOUND),
   INSUFFICIENT_POINTS("INSUFFICIENT_POINTS", "포인트가 부족합니다", HttpStatus.CONFLICT),
   INVALID_AMOUNT("INVALID_AMOUNT", "유효하지 않은 금액입니다", HttpStatus.BAD_REQUEST);
 

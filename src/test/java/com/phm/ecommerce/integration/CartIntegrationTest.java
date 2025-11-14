@@ -10,6 +10,7 @@ import com.phm.ecommerce.infrastructure.repository.ProductRepository;
 import com.phm.ecommerce.presentation.dto.request.AddCartItemRequest;
 import com.phm.ecommerce.presentation.dto.request.DeleteCartItemRequest;
 import com.phm.ecommerce.presentation.dto.request.UpdateQuantityRequest;
+import com.phm.ecommerce.support.TestContainerSupport;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -17,8 +18,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -28,9 +29,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@Transactional
 @DisplayName("장바구니 통합 테스트 (Controller + UseCase)")
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-class CartIntegrationTest {
+class CartIntegrationTest extends TestContainerSupport {
 
   @Autowired
   private MockMvc mockMvc;

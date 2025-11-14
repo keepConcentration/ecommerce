@@ -3,14 +3,22 @@ package com.phm.ecommerce.domain.point;
 import com.phm.ecommerce.domain.common.BaseEntity;
 import com.phm.ecommerce.domain.point.exception.InsufficientPointsException;
 import com.phm.ecommerce.domain.point.exception.InvalidAmountException;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+@Entity
+@Table(name = "points", indexes = {
+    @Index(name = "idx_point_user_id", columnList = "userId", unique = true)
+})
 @Slf4j
 @Getter
 public class Point extends BaseEntity {
 
+  @Column(nullable = false, unique = true)
   private Long userId;
+
+  @Column(nullable = false)
   private Long amount;
 
   protected Point() {
@@ -34,7 +42,6 @@ public class Point extends BaseEntity {
   public void charge(Long amount) {
     validateAmount(amount);
     this.amount += amount;
-    updateTimestamp();
   }
 
   public void deduct(Long amount) {
@@ -47,7 +54,6 @@ public class Point extends BaseEntity {
     this.amount -= amount;
     log.debug("포인트 차감 - userId: {}, deductedAmount: {}, remainingAmount: {}",
         this.userId, amount, this.amount);
-    updateTimestamp();
   }
 
   public boolean hasEnough(Long requiredAmount) {

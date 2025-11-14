@@ -3,13 +3,24 @@ package com.phm.ecommerce.domain.cart;
 import com.phm.ecommerce.domain.cart.exception.CartItemOwnershipViolationException;
 import com.phm.ecommerce.domain.cart.exception.InvalidCartQuantityException;
 import com.phm.ecommerce.domain.common.BaseEntity;
+import jakarta.persistence.*;
 import lombok.Getter;
 
+@Entity
+@Table(name = "cart_items", indexes = {
+    @Index(name = "idx_cart_user_id", columnList = "userId"),
+    @Index(name = "idx_cart_user_product", columnList = "userId, productId", unique = true)
+})
 @Getter
 public class CartItem extends BaseEntity {
 
+  @Column(nullable = false)
   private Long userId;
+
+  @Column(nullable = false)
   private Long productId;
+
+  @Column(nullable = false)
   private Long quantity;
 
   protected CartItem() {
@@ -35,13 +46,11 @@ public class CartItem extends BaseEntity {
   public void updateQuantity(Long newQuantity) {
     validateQuantity(newQuantity);
     this.quantity = newQuantity;
-    updateTimestamp();
   }
 
   public void increaseQuantity(Long quantity) {
     validateQuantity(quantity);
     this.quantity += quantity;
-    updateTimestamp();
   }
 
   private static void validateQuantity(Long quantity) {

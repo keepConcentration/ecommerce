@@ -3,17 +3,33 @@ package com.phm.ecommerce.domain.coupon;
 import com.phm.ecommerce.domain.common.BaseEntity;
 import com.phm.ecommerce.domain.coupon.exception.CouponAlreadyUsedException;
 import com.phm.ecommerce.domain.coupon.exception.CouponExpiredException;
+import jakarta.persistence.*;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
 
+@Entity
+@Table(name = "user_coupons", indexes = {
+    @Index(name = "idx_user_coupon_user_id", columnList = "userId"),
+    @Index(name = "idx_user_coupon_coupon_id", columnList = "couponId"),
+    @Index(name = "idx_user_coupon_user_coupon", columnList = "userId, couponId")
+})
 @Getter
 public class UserCoupon extends BaseEntity {
 
+  @Column(nullable = false)
   private Long userId;
+
+  @Column(nullable = false)
   private Long couponId;
+
+  @Column(nullable = false)
   private LocalDateTime issuedAt;
+
+  @Column
   private LocalDateTime usedAt;
+
+  @Column(nullable = false)
   private LocalDateTime expiredAt;
 
   protected UserCoupon() {
@@ -66,12 +82,10 @@ public class UserCoupon extends BaseEntity {
   public void use() {
     validateUsable();
     this.usedAt = LocalDateTime.now();
-    updateTimestamp();
   }
 
   public void rollbackUsage() {
     this.usedAt = null;
-    updateTimestamp();
   }
 
   public Long calculateDiscount(Coupon coupon) {

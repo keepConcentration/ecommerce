@@ -2,25 +2,25 @@ package com.phm.ecommerce.infrastructure.repository;
 
 import com.phm.ecommerce.domain.product.Product;
 import com.phm.ecommerce.domain.product.exception.ProductNotFoundException;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
-import java.util.Optional;
 
-public interface ProductRepository {
-
-  Product save(Product product);
-
-  Optional<Product> findById(Long id);
+public interface ProductRepository extends JpaRepository<Product, Long> {
 
   default Product findByIdOrThrow(Long id) {
     return findById(id).orElseThrow(ProductNotFoundException::new);
   }
 
-  List<Product> findAll();
+  @Query("SELECT p FROM Product p WHERE p.id IN :ids")
+  List<Product> findAllByIds(@Param("ids") List<Long> ids);
 
-  List<Product> findAllByIds(List<Long> ids);
+  @Query(value = "SELECT * FROM products ORDER BY popularity_score DESC LIMIT :limit", nativeQuery = true)
+  List<Product> findTopByPopularityScore(@Param("limit") int limit);
 
-  List<Product> findPopularProducts(int limit, Double viewWeight, Double salesWeight);
-
-  void deleteById(Long id);
+  default List<Product> findPopularProducts(int limit) {
+    return findTopByPopularityScore(limit);
+  }
 }

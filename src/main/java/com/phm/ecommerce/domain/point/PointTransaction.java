@@ -1,16 +1,36 @@
 package com.phm.ecommerce.domain.point;
 
+import jakarta.persistence.*;
 import lombok.Getter;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
 
+@Entity
+@Table(name = "point_transactions", indexes = {
+    @Index(name = "idx_point_transaction_point_id", columnList = "pointId"),
+    @Index(name = "idx_point_transaction_order_id", columnList = "orderId")
+})
+@EntityListeners(AuditingEntityListener.class)
 @Getter
 public class PointTransaction {
 
+  @Id
+  @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
+
+  @Column(nullable = false)
   private Long pointId;
+
+  @Column
   private Long orderId;
+
+  @Column(nullable = false)
   private Long amount;
+
+  @CreatedDate
+  @Column(updatable = false)
   private LocalDateTime createdAt;
 
   protected PointTransaction() {

@@ -1,30 +1,43 @@
 package com.phm.ecommerce.domain.coupon;
 
+import com.phm.ecommerce.domain.common.BaseEntity;
 import com.phm.ecommerce.domain.coupon.exception.CouponSoldOutException;
+import jakarta.persistence.*;
 import lombok.Getter;
 
+@Entity
+@Table(name = "coupons")
 @Getter
-public class Coupon {
+public class Coupon extends BaseEntity {
 
-  private Long id;
+  @Column(nullable = false)
   private String name;
+
+  @Column(nullable = false)
   private Long discountAmount;
+
+  @Column(nullable = false)
   private Long totalQuantity;
+
+  @Column(nullable = false)
   private Long issuedQuantity;
+
+  @Column(nullable = false)
   private Integer validDays;
 
   protected Coupon() {
+    super();
     this.issuedQuantity = 0L;
   }
 
-  public Coupon(
+  private Coupon(
       Long id,
       String name,
       Long discountAmount,
       Long totalQuantity,
       Long issuedQuantity,
       Integer validDays) {
-    this.id = id;
+    super(id);
     this.name = name;
     this.discountAmount = discountAmount;
     this.totalQuantity = totalQuantity;
@@ -34,6 +47,16 @@ public class Coupon {
 
   public static Coupon create(String name, Long discountAmount, Long totalQuantity, Integer validDays) {
     return new Coupon(null, name, discountAmount, totalQuantity, 0L, validDays);
+  }
+
+  public static Coupon reconstruct(
+      Long id,
+      String name,
+      Long discountAmount,
+      Long totalQuantity,
+      Long issuedQuantity,
+      Integer validDays) {
+    return new Coupon(id, name, discountAmount, totalQuantity, issuedQuantity, validDays);
   }
 
   public boolean canIssue() {

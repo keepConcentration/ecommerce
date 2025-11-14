@@ -1,14 +1,26 @@
 package com.phm.ecommerce.domain.order;
 
 import com.phm.ecommerce.domain.common.BaseEntity;
+import jakarta.persistence.*;
 import lombok.Getter;
 
+@Entity
+@Table(name = "orders", indexes = {
+    @Index(name = "idx_order_user_id", columnList = "userId")
+})
 @Getter
 public class Order extends BaseEntity {
 
+  @Column(nullable = false)
   private Long userId;
+
+  @Column(nullable = false)
   private Long totalAmount;
+
+  @Column(nullable = false)
   private Long discountAmount;
+
+  @Column(nullable = false)
   private Long finalAmount;
 
   protected Order() {
