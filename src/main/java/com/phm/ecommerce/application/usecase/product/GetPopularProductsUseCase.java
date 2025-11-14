@@ -15,19 +15,9 @@ public class GetPopularProductsUseCase {
   private final ProductRepository productRepository;
 
   private static final int DEFAULT_LIMIT = 5;
-  private static final double DEFAULT_VIEW_WEIGHT = 0.1;
-  private static final double DEFAULT_SALES_WEIGHT = 0.9;
 
   public List<Output> execute() {
-    int limit = DEFAULT_LIMIT;
-    double viewWeight = DEFAULT_VIEW_WEIGHT;
-    double salesWeight = DEFAULT_SALES_WEIGHT;
-
-    List<Product> popularProducts = productRepository.findPopularProducts(
-        limit,
-        viewWeight,
-        salesWeight
-    );
+    List<Product> popularProducts = productRepository.findPopularProducts(DEFAULT_LIMIT);
 
     return popularProducts.stream()
         .map(product -> new Output(
@@ -37,7 +27,7 @@ public class GetPopularProductsUseCase {
             product.getQuantity(),
             product.getViewCount(),
             product.getSalesCount(),
-            product.calculatePopularityScore(viewWeight, salesWeight),
+            product.getPopularityScore(),
             product.getCreatedAt(),
             product.getUpdatedAt()
         ))

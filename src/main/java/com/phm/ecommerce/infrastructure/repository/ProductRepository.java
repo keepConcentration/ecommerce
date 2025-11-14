@@ -17,12 +17,10 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
   @Query("SELECT p FROM Product p WHERE p.id IN :ids")
   List<Product> findAllByIds(@Param("ids") List<Long> ids);
 
-  @Query(value = "SELECT * FROM products p ORDER BY (p.view_count * :viewWeight + p.sales_count * :salesWeight) DESC", nativeQuery = true)
-  List<Product> findTopByPopularity(@Param("viewWeight") Double viewWeight,
-                                     @Param("salesWeight") Double salesWeight);
+  @Query(value = "SELECT * FROM products ORDER BY popularity_score DESC LIMIT :limit", nativeQuery = true)
+  List<Product> findTopByPopularityScore(@Param("limit") int limit);
 
-  default List<Product> findPopularProducts(int limit, Double viewWeight, Double salesWeight) {
-    List<Product> products = findTopByPopularity(viewWeight, salesWeight);
-    return products.stream().limit(limit).toList();
+  default List<Product> findPopularProducts(int limit) {
+    return findTopByPopularityScore(limit);
   }
 }
