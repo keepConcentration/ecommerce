@@ -1,17 +1,11 @@
 package com.phm.ecommerce.infrastructure.repository;
 
-
 import com.phm.ecommerce.domain.point.PointTransaction;
+import org.springframework.data.jpa.repository.JpaRepository;
+
 import java.util.List;
-import java.util.Optional;
 
-public interface PointTransactionRepository {
-
-  PointTransaction save(PointTransaction pointTransaction);
-
-  Optional<PointTransaction> findById(Long id);
+public interface PointTransactionRepository extends JpaRepository<PointTransaction, Long> {
 
   List<PointTransaction> findByPointId(Long pointId);
-
-  void deleteById(Long id);
 }

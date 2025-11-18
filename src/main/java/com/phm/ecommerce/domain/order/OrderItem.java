@@ -1,20 +1,45 @@
 package com.phm.ecommerce.domain.order;
 
 import com.phm.ecommerce.domain.common.BaseEntity;
+import jakarta.persistence.*;
 import lombok.Getter;
 
+@Entity
+@Table(name = "order_items", indexes = {
+    @Index(name = "idx_order_item_order_id", columnList = "orderId"),
+    @Index(name = "idx_order_item_user_id", columnList = "userId")
+})
 @Getter
 public class OrderItem extends BaseEntity {
 
+  @Column(nullable = false)
   private Long orderId;
+
+  @Column(nullable = false)
   private Long userId;
+
+  @Column(nullable = false)
   private Long productId;
+
+  @Column
   private Long userCouponId;
+
+  @Column(nullable = false)
   private String productName;
+
+  @Column(nullable = false)
   private Long quantity;
+
+  @Column(nullable = false)
   private Long price;
+
+  @Column(nullable = false)
   private Long totalPrice;
+
+  @Column(nullable = false)
   private Long discountAmount;
+
+  @Column(nullable = false)
   private Long finalAmount;
 
   protected OrderItem() {

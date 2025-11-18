@@ -188,7 +188,7 @@ class ProductTest {
   }
 
   @Test
-  @DisplayName("인기도 점수 계산 - 가중치 적용")
+  @DisplayName("인기도 점수 계산")
   void calculatePopularityScore() {
     // given
     Product product = Product.create("상품", 10000L, 100L);
@@ -196,17 +196,8 @@ class ProductTest {
     product.increaseViewCount();
     product.increaseSalesCount(10L);
 
-    // when
-    Double score1 = product.calculatePopularityScore(0.3, 0.7);
-    Double score2 = product.calculatePopularityScore(0.5, 0.5);
-    Double score3 = product.calculatePopularityScore(1.0, 0.0);
-
-    // then
-    assertAll(
-        () -> assertThat(score1).isEqualTo(2 * 0.3 + 10 * 0.7), // 7.6
-        () -> assertThat(score2).isEqualTo(2 * 0.5 + 10 * 0.5), // 6.0
-        () -> assertThat(score3).isEqualTo(2 * 1.0 + 10 * 0.0)  // 2.0
-    );
+    // when & then
+    assertThat(product.getPopularityScore()).isEqualTo(2 * 0.1 + 10 * 0.9);
   }
 
   @Test
@@ -215,10 +206,7 @@ class ProductTest {
     // given
     Product product = Product.create("상품", 10000L, 100L);
 
-    // when
-    Double score = product.calculatePopularityScore(0.3, 0.7);
-
-    // then
-    assertThat(score).isEqualTo(0.0);
+    // when & then
+    assertThat(product.getPopularityScore()).isEqualTo(0.0);
   }
 }

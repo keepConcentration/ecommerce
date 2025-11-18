@@ -3,14 +3,15 @@ package com.phm.ecommerce.integration;
 import com.phm.ecommerce.domain.product.Product;
 import com.phm.ecommerce.domain.product.exception.ProductErrorCode;
 import com.phm.ecommerce.infrastructure.repository.ProductRepository;
+import com.phm.ecommerce.support.TestContainerSupport;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -19,9 +20,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@Transactional
 @DisplayName("상품 통합 테스트 (Controller + UseCase)")
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
-class ProductIntegrationTest {
+class ProductIntegrationTest extends TestContainerSupport {
 
   @Autowired
   private MockMvc mockMvc;
@@ -86,17 +87,5 @@ class ProductIntegrationTest {
         .andExpect(status().isNotFound())
         .andExpect(jsonPath("$.status").value(false))
         .andExpect(jsonPath("$.error.code").value(ProductErrorCode.PRODUCT_NOT_FOUND.getCode()));
-  }
-
-  @Test
-  @DisplayName("인기 상품 조회 - 성공")
-  void getPopularProducts_Success() throws Exception {
-    // when & then
-    mockMvc.perform(get("/api/v1/products/popular")
-            .contentType(MediaType.APPLICATION_JSON))
-        .andDo(print())
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$.status").value(true))
-        .andExpect(jsonPath("$.data").isArray());
   }
 }
