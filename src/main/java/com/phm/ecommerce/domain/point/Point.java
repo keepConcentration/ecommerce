@@ -21,6 +21,9 @@ public class Point extends BaseEntity {
   @Column(nullable = false)
   private Long amount;
 
+  @Version
+  private Long version;
+
   protected Point() {
     super();
   }

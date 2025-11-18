@@ -18,6 +18,7 @@ import com.phm.ecommerce.infrastructure.repository.PointRepository;
 import com.phm.ecommerce.infrastructure.repository.PointTransactionRepository;
 import com.phm.ecommerce.infrastructure.repository.ProductRepository;
 import com.phm.ecommerce.infrastructure.repository.UserCouponRepository;
+import jakarta.persistence.OptimisticLockException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -25,6 +26,9 @@ import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -52,6 +56,11 @@ public class CreateOrderUseCase {
       Long userCouponId) {}
 
   @Transactional
+  @Retryable(
+      retryFor = {OptimisticLockException.class, ObjectOptimisticLockingFailureException.class},
+      maxAttempts = 10,
+      backoff = @Backoff(delay = 100, multiplier = 1.5)
+  )
   public Output execute(Input request) {
     log.info("주문 생성 시작 - userId: {}, cartItemCount: {}",
         request.userId(), request.cartItemCouponMaps().size());
@@ -84,7 +93,7 @@ public class CreateOrderUseCase {
       Product product = productRepository.findByIdOrThrow(cartItem.getProductId());
       product.decreaseStock(cartItem.getQuantity());
       product.increaseSalesCount(cartItem.getQuantity());
-      Product savedProduct = productRepository.save(product);
+      product = productRepository.save(product);
 
       Long discountAmount = 0L;
       UserCoupon userCoupon = null;
@@ -96,9 +105,9 @@ public class CreateOrderUseCase {
         discountAmount = userCoupon.calculateDiscount(coupon);
       }
 
-      orderItemDataList.add(new OrderItemData(cartItem, savedProduct, userCoupon, discountAmount));
+      orderItemDataList.add(new OrderItemData(cartItem, product, userCoupon, discountAmount));
 
-      Long itemTotalAmount = orderPricingService.calculateItemTotal(savedProduct, cartItem.getQuantity());
+      Long itemTotalAmount = orderPricingService.calculateItemTotal(product, cartItem.getQuantity());
       totalAmount += itemTotalAmount;
       totalDiscountAmount += discountAmount;
     }
@@ -110,19 +119,19 @@ public class CreateOrderUseCase {
 
     Point point = pointRepository.findByUserIdOrThrow(request.userId());
     point.deduct(finalAmount);
-    Point savedPoint = pointRepository.save(point);
+    point = pointRepository.save(point);
 
     log.debug("포인트 차감 완료 - userId: {}, deductedAmount: {}, remainingPoints: {}",
-        request.userId(), finalAmount, savedPoint.getAmount());
+        request.userId(), finalAmount, point.getAmount());
 
     Order order = Order.create(request.userId(), totalAmount, totalDiscountAmount);
-    Order savedOrder = orderRepository.save(order);
+    order = orderRepository.save(order);
 
     List<OrderItemInfo> orderItemInfos = new ArrayList<>();
     for (OrderItemData data : orderItemDataList) {
       OrderItem orderItem =
           OrderItem.create(
-              savedOrder.getId(),
+              order.getId(),
               request.userId(),
               data.product.getId(),
               data.product.getName(),
@@ -151,7 +160,7 @@ public class CreateOrderUseCase {
     }
 
     PointTransaction pointTransaction =
-        PointTransaction.createDeduction(savedPoint.getId(), savedOrder.getId(), finalAmount);
+        PointTransaction.createDeduction(point.getId(), order.getId(), finalAmount);
     pointTransactionRepository.save(pointTransaction);
 
     for (CartItem cartItem : cartItems) {
@@ -159,15 +168,15 @@ public class CreateOrderUseCase {
     }
 
     log.info("주문 생성 완료 - orderId: {}, userId: {}, finalAmount: {}, orderItemCount: {}",
-        savedOrder.getId(), savedOrder.getUserId(), savedOrder.getFinalAmount(), orderItemInfos.size());
+        order.getId(), order.getUserId(), order.getFinalAmount(), orderItemInfos.size());
 
     return new Output(
-        savedOrder.getId(),
-        savedOrder.getUserId(),
-        savedOrder.getTotalAmount(),
-        savedOrder.getDiscountAmount(),
-        savedOrder.getFinalAmount(),
-        savedOrder.getCreatedAt(),
+        order.getId(),
+        order.getUserId(),
+        order.getTotalAmount(),
+        order.getDiscountAmount(),
+        order.getFinalAmount(),
+        order.getCreatedAt(),
         orderItemInfos);
   }
 
@@ -191,7 +200,6 @@ public class CreateOrderUseCase {
       Long finalAmount,
       Long userCouponId) {}
 
-  // 내부 데이터 클래스
     private record OrderItemData(CartItem cartItem, Product product, UserCoupon userCoupon, Long discountAmount) {
 
   }
