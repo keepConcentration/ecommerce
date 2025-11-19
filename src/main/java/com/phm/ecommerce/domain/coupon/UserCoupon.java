@@ -9,11 +9,15 @@ import lombok.Getter;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "user_coupons", indexes = {
-    @Index(name = "idx_user_coupon_user_id", columnList = "userId"),
-    @Index(name = "idx_user_coupon_coupon_id", columnList = "couponId"),
-    @Index(name = "idx_user_coupon_user_coupon", columnList = "userId, couponId")
-})
+@Table(name = "user_coupons",
+    indexes = {
+        @Index(name = "idx_user_coupon_user_id", columnList = "userId"),
+        @Index(name = "idx_user_coupon_coupon_id", columnList = "couponId")
+    },
+    uniqueConstraints = {
+        @UniqueConstraint(name = "uk_user_coupon", columnNames = {"userId", "couponId"})
+    }
+)
 @Getter
 public class UserCoupon extends BaseEntity {
 

@@ -6,6 +6,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Index;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -34,6 +35,9 @@ public class Product extends BaseEntity {
 
   @Column(nullable = false)
   private Double popularityScore;
+
+  @Version
+  private Long version;
 
   protected Product() {
     super();

@@ -5,10 +5,16 @@ import com.phm.ecommerce.domain.point.PointTransaction;
 import com.phm.ecommerce.infrastructure.repository.PointRepository;
 import com.phm.ecommerce.infrastructure.repository.PointTransactionRepository;
 import lombok.RequiredArgsConstructor;
+import jakarta.persistence.OptimisticLockException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
@@ -22,6 +28,12 @@ public class ChargePointsUseCase {
       Long userId,
       Long amount) {}
 
+  @Transactional
+  @Retryable(
+      retryFor = {OptimisticLockException.class, ObjectOptimisticLockingFailureException.class, DataIntegrityViolationException.class},
+      maxAttempts = 20,
+      backoff = @Backoff(delay = 100, maxDelay = 1000, multiplier = 1.5)
+  )
   public Output execute(Input request) {
     log.info("포인트 충전 시작 - userId: {}, chargeAmount: {}", request.userId(), request.amount());
 
