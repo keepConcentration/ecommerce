@@ -9,6 +9,7 @@ import com.phm.ecommerce.domain.point.Point;
 import com.phm.ecommerce.domain.point.exception.PointErrorCode;
 import com.phm.ecommerce.domain.product.Product;
 import com.phm.ecommerce.domain.product.exception.ProductErrorCode;
+import com.phm.ecommerce.domain.user.User;
 import com.phm.ecommerce.infrastructure.repository.*;
 import com.phm.ecommerce.presentation.dto.request.CartItemCouponMap;
 import com.phm.ecommerce.presentation.dto.request.CreateOrderRequest;
@@ -60,25 +61,26 @@ class OrderIntegrationTest extends TestContainerSupport {
   private PointRepository pointRepository;
 
   @Autowired
-  private OrderRepository orderRepository;
+  private UserRepository userRepository;
 
-  @Autowired
-  private OrderItemRepository orderItemRepository;
-
-  private Long testUserId = 1L;
+  private Long testUserId;
   private Product testProduct;
-  private Point testPoint;
 
   @BeforeEach
   void setUp() {
+    // 테스트용 사용자 생성
+    User testUser = User.create();
+    testUser = userRepository.save(testUser);
+    testUserId = testUser.getId();
+
     // 테스트용 상품 생성
     testProduct = Product.create("테스트 상품", 10000L, 100L);
     testProduct = productRepository.save(testProduct);
 
     // 테스트용 포인트 생성 및 충전
-    testPoint = Point.create(testUserId);
+    Point testPoint = Point.create(testUserId);
     testPoint.charge(100000L);
-    testPoint = pointRepository.save(testPoint);
+    pointRepository.save(testPoint);
   }
 
   @Test
@@ -169,7 +171,8 @@ class OrderIntegrationTest extends TestContainerSupport {
   @DisplayName("장바구니 기반 주문 생성 - 실패 (포인트 부족)")
   void createOrder_InsufficientPoints() throws Exception {
     // given - 포인트가 부족한 사용자
-    Long poorUserId = 2L;
+    User poorUser = userRepository.save(User.create());
+    Long poorUserId = poorUser.getId();
     Point poorPoint = Point.create(poorUserId);
     poorPoint.charge(1000L); // 부족한 포인트
     pointRepository.save(poorPoint);
