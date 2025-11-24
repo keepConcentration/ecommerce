@@ -7,6 +7,7 @@ import com.phm.ecommerce.infrastructure.repository.CouponRepository;
 import com.phm.ecommerce.infrastructure.repository.UserCouponRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,21 +37,27 @@ public class IssueCouponUseCase {
       throw new CouponAlreadyIssuedException();
     }
 
-    Coupon coupon = couponRepository.findByIdWithLockOrThrow(request.couponId());
-    UserCoupon userCoupon = issue(request.userId(), coupon);
+    try {
+      Coupon coupon = couponRepository.findByIdWithLockOrThrow(request.couponId());
+      UserCoupon userCoupon = issue(request.userId(), coupon);
 
-    log.info("쿠폰 발급 완료 - userCouponId: {}, userId: {}, couponId: {}",
-        userCoupon.getId(), request.userId(), request.couponId());
+      log.info("쿠폰 발급 완료 - userCouponId: {}, userId: {}, couponId: {}",
+          userCoupon.getId(), request.userId(), request.couponId());
 
-    return new Output(
-        userCoupon.getId(),
-        userCoupon.getUserId(),
-        userCoupon.getCouponId(),
-        coupon.getName(),
-        coupon.getDiscountAmount(),
-        userCoupon.getIssuedAt(),
-        userCoupon.getExpiredAt()
-    );
+      return new Output(
+          userCoupon.getId(),
+          userCoupon.getUserId(),
+          userCoupon.getCouponId(),
+          coupon.getName(),
+          coupon.getDiscountAmount(),
+          userCoupon.getIssuedAt(),
+          userCoupon.getExpiredAt()
+      );
+    } catch (DataIntegrityViolationException e) {
+      log.warn("쿠폰 발급 실패 - 중복 발급 시도. userId: {}, couponId: {}",
+          request.userId(), request.couponId());
+      throw new CouponAlreadyIssuedException();
+    }
   }
 
   private UserCoupon issue(Long userId, Coupon coupon) {
