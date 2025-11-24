@@ -3,7 +3,7 @@ package com.phm.ecommerce.integration;
 import com.phm.ecommerce.application.usecase.coupon.IssueCouponUseCase;
 import com.phm.ecommerce.domain.coupon.Coupon;
 import com.phm.ecommerce.domain.coupon.UserCoupon;
-import com.phm.ecommerce.domain.coupon.exception.CouponSoldOutException;
+import com.phm.ecommerce.domain.coupon.exception.CouponAlreadyIssuedException;
 import com.phm.ecommerce.infrastructure.repository.CouponRepository;
 import com.phm.ecommerce.infrastructure.repository.UserCouponRepository;
 import com.phm.ecommerce.support.TestContainerSupport;
@@ -74,10 +74,7 @@ class CouponConcurrencyIntegrationTest extends TestContainerSupport {
         try {
           issueCouponUseCase.execute(new IssueCouponUseCase.Input(couponId, finalUserId));
           successCount.incrementAndGet();
-        } catch (CouponSoldOutException e) {
-          failCount.incrementAndGet();
         } catch (Exception e) {
-          e.printStackTrace();
           failCount.incrementAndGet();
         } finally {
           latch.countDown();
@@ -96,7 +93,7 @@ class CouponConcurrencyIntegrationTest extends TestContainerSupport {
     assertThat(issuedCoupons).hasSize(TOTAL_QUANTITY);
 
     Coupon coupon = couponRepository.findByIdOrThrow(couponId);
-    assertThat(coupon.getIssuedQuantity()).isEqualTo((long) TOTAL_QUANTITY);
+    assertThat(coupon.getIssuedQuantity()).isEqualTo(TOTAL_QUANTITY);
     assertThat(coupon.getRemainingQuantity()).isZero();
   }
 
@@ -119,8 +116,8 @@ class CouponConcurrencyIntegrationTest extends TestContainerSupport {
         try {
           issueCouponUseCase.execute(new IssueCouponUseCase.Input(abundantCouponId, finalUserId));
           successCount.incrementAndGet();
-        } catch (Exception e) {
-          e.printStackTrace();
+        } catch (Exception ignored) {
+
         } finally {
           latch.countDown();
         }
@@ -136,5 +133,44 @@ class CouponConcurrencyIntegrationTest extends TestContainerSupport {
     Coupon result = couponRepository.findByIdOrThrow(abundantCouponId);
     assertThat(result.getIssuedQuantity()).isEqualTo(50L);
     assertThat(result.getRemainingQuantity()).isEqualTo(50L);
+  }
+
+  @Test
+  @DisplayName("같은 사용자가 동시에 동일 쿠폰 10번 발급 시도 - 1번만 성공")
+  void concurrentCouponIssuance_sameUserSameCoupon_shouldIssueOnlyOnce() throws InterruptedException {
+    // given
+    Long userId = 1L;
+    int attemptCount = 10;
+    ExecutorService executorService = Executors.newFixedThreadPool(attemptCount);
+    CountDownLatch latch = new CountDownLatch(attemptCount);
+    AtomicInteger successCount = new AtomicInteger(0);
+    AtomicInteger alreadyIssuedCount = new AtomicInteger(0);
+
+    // when
+    for (int i = 0; i < attemptCount; i++) {
+      executorService.submit(() -> {
+        try {
+          issueCouponUseCase.execute(new IssueCouponUseCase.Input(couponId, userId));
+          successCount.incrementAndGet();
+        } catch (CouponAlreadyIssuedException e) {
+          alreadyIssuedCount.incrementAndGet();
+        } catch (Exception ignored) {
+
+        } finally {
+          latch.countDown();
+        }
+      });
+    }
+
+    latch.await();
+    executorService.shutdown();
+
+    // then
+    assertThat(successCount.get()).isEqualTo(1);
+    assertThat(alreadyIssuedCount.get()).isEqualTo(attemptCount - 1);
+
+    List<UserCoupon> userCoupons = userCouponRepository.findByUserId(userId);
+    assertThat(userCoupons).hasSize(1);
+    assertThat(userCoupons.get(0).getCouponId()).isEqualTo(couponId);
   }
 }
