@@ -3,6 +3,7 @@ package com.phm.ecommerce.config;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Profile;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
@@ -19,6 +20,7 @@ import java.util.Random;
 public class DataSeeder implements CommandLineRunner {
 
     private final JdbcTemplate jdbcTemplate;
+    private final ConfigurableApplicationContext applicationContext;
     private final Random random = new Random();
 
     private static final int BATCH_SIZE = 50000;  // 배치 크기 증가로 성능 향상
@@ -72,6 +74,11 @@ public class DataSeeder implements CommandLineRunner {
         log.info("========================================");
         log.info("Data seeding completed in {} seconds", (endTime - startTime) / 1000);
         log.info("========================================");
+
+        // Shutdown the application context to terminate the CLI
+        log.info("Shutting down application...");
+        applicationContext.close();
+        System.exit(0);
     }
 
     private void truncateAllTables() {
