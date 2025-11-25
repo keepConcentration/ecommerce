@@ -22,12 +22,12 @@ public class DataSeeder implements CommandLineRunner {
     private final Random random = new Random();
 
     private static final int BATCH_SIZE = 50000;  // 배치 크기 증가로 성능 향상
-    private static final int TOTAL_USERS = 1_000_000;
-    private static final int TOTAL_PRODUCTS = 100_000;
-    private static final int TOTAL_COUPONS = 10_000;
-    private static final int TOTAL_USER_COUPONS = 5_000_000;
-    private static final int TOTAL_CART_ITEMS = 2_000_000;
-    private static final int TOTAL_ORDERS = 5_000_000;
+    private static final int TOTAL_USERS = 100_000;
+    private static final int TOTAL_PRODUCTS = 10_000;
+    private static final int TOTAL_COUPONS = 1_000;
+    private static final int TOTAL_USER_COUPONS = 500_000;
+    private static final int TOTAL_CART_ITEMS = 200_000;
+    private static final int TOTAL_ORDERS = 500_000;
 
     // 메모리에 저장할 데이터 (정합성 유지용)
     private long[] productPrices;
@@ -152,8 +152,8 @@ public class DataSeeder implements CommandLineRunner {
 
         productPrices = new long[TOTAL_PRODUCTS + 1];
 
-        String sql = "INSERT INTO products (name, price, quantity, view_count, sales_count, popularity_score, version, created_at, updated_at) " +
-                "VALUES (?, ?, ?, ?, ?, ?, 0, NOW(), NOW())";
+        String sql = "INSERT INTO products (name, price, quantity, view_count, sales_count, popularity_score, created_at, updated_at) " +
+                "VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())";
 
         jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 0");
 
@@ -347,8 +347,8 @@ public class DataSeeder implements CommandLineRunner {
 
         pointBalances = new long[TOTAL_USERS + 1];
 
-        String sql = "INSERT IGNORE INTO points (user_id, amount, version, created_at, updated_at) " +
-                "VALUES (?, 0, 0, NOW(), NOW())";
+        String sql = "INSERT IGNORE INTO points (user_id, amount, created_at, updated_at) " +
+                "VALUES (?, 0, NOW(), NOW())";
 
         jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 0");
 

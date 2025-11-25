@@ -15,6 +15,11 @@ spring:
         show_sql: true
         use_sql_comments: true
     open-in-view: false
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      timeout: 3000ms
 
 server:
   port: 8085
