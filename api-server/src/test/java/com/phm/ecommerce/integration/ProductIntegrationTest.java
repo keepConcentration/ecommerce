@@ -45,12 +45,12 @@ class ProductIntegrationTest extends TestContainerSupport {
         .andDo(print())
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.status").value(true))
-        .andExpect(jsonPath("$.data").isArray())
-        .andExpect(jsonPath("$.data.length()").value(2))
-        .andExpect(jsonPath("$.data[0].name").value("노트북"))
-        .andExpect(jsonPath("$.data[0].price").value(1500000))
-        .andExpect(jsonPath("$.data[1].name").value("마우스"))
-        .andExpect(jsonPath("$.data[1].price").value(50000));
+        .andExpect(jsonPath("$.data.content").isArray())
+        .andExpect(jsonPath("$.data.content.length()").value(2))
+        .andExpect(jsonPath("$.data.content[0].name").value("노트북"))
+        .andExpect(jsonPath("$.data.content[0].price").value(1500000))
+        .andExpect(jsonPath("$.data.content[1].name").value("마우스"))
+        .andExpect(jsonPath("$.data.content[1].price").value(50000));
   }
 
   @Test

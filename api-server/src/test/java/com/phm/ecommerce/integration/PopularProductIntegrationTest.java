@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cache.CacheManager;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
@@ -52,6 +53,9 @@ class PopularProductIntegrationTest extends TestContainerSupport {
 
   @Autowired
   private CartItemRepository cartItemRepository;
+
+  @Autowired
+  private CacheManager cacheManager;
 
   private User user;
   private Product product1;
@@ -106,6 +110,9 @@ class PopularProductIntegrationTest extends TestContainerSupport {
     createOrder(user.getId(), product2.getId(), 30L);
     createOrder(user.getId(), product3.getId(), 100L);
 
+    cacheManager.getCache("popularProductIds").clear();
+    cacheManager.getCache("product").clear();
+
     // when & then
     mockMvc
         .perform(get("/api/v1/products/popular"))
@@ -134,6 +141,9 @@ class PopularProductIntegrationTest extends TestContainerSupport {
       product1.increaseViewCount();
     }
     productRepository.save(product1);
+
+    cacheManager.getCache("popularProductIds").clear();
+    cacheManager.getCache("product").clear();
 
     // when & then
     mockMvc.perform(get("/api/v1/products/popular"))

@@ -1,7 +1,6 @@
 package com.phm.ecommerce.application.usecase.product;
 
-import com.phm.ecommerce.domain.product.Product;
-import com.phm.ecommerce.infrastructure.repository.ProductRepository;
+import com.phm.ecommerce.application.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -12,25 +11,32 @@ import java.util.List;
 @RequiredArgsConstructor
 public class GetPopularProductsUseCase {
 
-  private final ProductRepository productRepository;
+  private final ProductService productService;
 
   private static final int DEFAULT_LIMIT = 5;
 
   public List<Output> execute() {
-    List<Product> popularProducts = productRepository.findPopularProducts(DEFAULT_LIMIT);
+    return execute(DEFAULT_LIMIT);
+  }
 
-    return popularProducts.stream()
-        .map(product -> new Output(
-            product.getId(),
-            product.getName(),
-            product.getPrice(),
-            product.getQuantity(),
-            product.getViewCount(),
-            product.getSalesCount(),
-            product.getPopularityScore(),
-            product.getCreatedAt(),
-            product.getUpdatedAt()
-        ))
+  public List<Output> execute(int limit) {
+    ProductService.ProductIdList productIdList = productService.getPopularProductIds(limit);
+
+    return productIdList.ids().stream()
+        .map(productId -> {
+          ProductService.ProductInfo product = productService.getProduct(productId);
+          return new Output(
+              product.id(),
+              product.name(),
+              product.price(),
+              product.quantity(),
+              product.viewCount(),
+              product.salesCount(),
+              product.popularityScore(),
+              product.createdAt(),
+              product.updatedAt()
+          );
+        })
         .toList();
   }
 

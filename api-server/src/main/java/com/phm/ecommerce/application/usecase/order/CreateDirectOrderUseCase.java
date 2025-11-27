@@ -1,5 +1,6 @@
 package com.phm.ecommerce.application.usecase.order;
 
+import com.phm.ecommerce.application.lock.MultiDistributedLock;
 import com.phm.ecommerce.domain.coupon.Coupon;
 import com.phm.ecommerce.domain.coupon.UserCoupon;
 import com.phm.ecommerce.domain.order.Order;
@@ -15,12 +16,8 @@ import com.phm.ecommerce.infrastructure.repository.PointRepository;
 import com.phm.ecommerce.infrastructure.repository.PointTransactionRepository;
 import com.phm.ecommerce.infrastructure.repository.ProductRepository;
 import com.phm.ecommerce.infrastructure.repository.UserCouponRepository;
-import jakarta.persistence.OptimisticLockException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.orm.ObjectOptimisticLockingFailureException;
-import org.springframework.retry.annotation.Backoff;
-import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,12 +40,8 @@ public class CreateDirectOrderUseCase {
 
   public record Input(Long userId, Long productId, Long quantity, Long userCouponId) {}
 
+  @MultiDistributedLock(lockKeyProvider = "prepareLockKeys")
   @Transactional
-  @Retryable(
-      retryFor = {OptimisticLockException.class, ObjectOptimisticLockingFailureException.class},
-      maxAttempts = 10,
-      backoff = @Backoff(delay = 100, multiplier = 1.5)
-  )
   public Output execute(Input request) {
     log.info("즉시 구매 주문 생성 시작 - userId: {}, productId: {}, quantity: {}",
         request.userId(), request.productId(), request.quantity());
@@ -129,6 +122,13 @@ public class CreateDirectOrderUseCase {
         order.getFinalAmount(),
         order.getCreatedAt(),
         List.of(orderItemInfo));
+  }
+
+  private List<String> prepareLockKeys(Input request) {
+    return List.of(
+        "product:" + request.productId(),
+        "point:user:" + request.userId()
+    );
   }
 
   public record Output(
