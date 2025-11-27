@@ -3,8 +3,10 @@ package com.phm.ecommerce.presentation.mapper;
 import com.phm.ecommerce.application.usecase.product.GetPopularProductsUseCase;
 import com.phm.ecommerce.application.usecase.product.GetProductByIdUseCase;
 import com.phm.ecommerce.application.usecase.product.GetProductsUseCase;
+import com.phm.ecommerce.presentation.dto.response.PageResponse;
 import com.phm.ecommerce.presentation.dto.response.PopularProductResponse;
 import com.phm.ecommerce.presentation.dto.response.ProductResponse;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -12,8 +14,8 @@ import java.util.List;
 @Component
 public class ProductMapper {
 
-  public List<ProductResponse> toResponses(List<GetProductsUseCase.Output> outputs) {
-    return outputs.stream()
+  public PageResponse<ProductResponse> toPageResponse(Page<GetProductsUseCase.Output> pageOutput) {
+    List<ProductResponse> content = pageOutput.getContent().stream()
         .map(output -> new ProductResponse(
             output.productId(),
             output.name(),
@@ -23,6 +25,15 @@ public class ProductMapper {
             output.createdAt(),
             output.updatedAt()))
         .toList();
+
+    return new PageResponse<>(
+        content,
+        pageOutput.getNumber(),
+        pageOutput.getSize(),
+        pageOutput.getTotalElements(),
+        pageOutput.getTotalPages(),
+        pageOutput.isFirst(),
+        pageOutput.isLast());
   }
 
   public GetProductByIdUseCase.Input toInput(Long productId) {
