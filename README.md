@@ -212,17 +212,17 @@ cd api-server && ./gradlew seedData
 
 | 테이블 | 건수 | 설명 |
 |--------|------|------|
-| users | 1,000,000 | |
-| products | 100,000 | |
-| coupons | 10,000 | |
-| user_coupons | ~5,000,000 | 중복 제외 |
-| cart_items | ~2,000,000 | 중복 제외 |
-| points | 1,000,000 | 유저당 1개 |
-| orders | 5,000,000 | |
-| order_items | ~10,000,000 | 주문당 1~3개 |
-| point_transactions | ~6,500,000 | 충전 + 차감 |
+| users | 100,000 | |
+| products | 10,000 | |
+| coupons | 1,000 | |
+| user_coupons | ~500,000 | 중복 제외 (INSERT IGNORE) |
+| cart_items | ~200,000 | 중복 제외 (INSERT IGNORE) |
+| points | 100,000 | 유저당 1개 (1:1 관계) |
+| orders | 500,000 | |
+| order_items | ~1,000,000 | 주문당 1~3개 |
+| point_transactions | ~650,000 | 주문 차감 500,000 + 충전 ~150,000 |
 
-**예상 용량: 약 5~10GB** (인덱스 포함)
+**예상 용량: 약 2~3GB** (인덱스 포함)
 
 ### 데이터 정합성
 
