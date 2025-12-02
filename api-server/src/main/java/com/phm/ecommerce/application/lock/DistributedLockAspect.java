@@ -41,22 +41,16 @@ public class DistributedLockAspect {
             );
 
             if (!acquired) {
-                log.warn("Failed to acquire lock: {}", lockKey);
                 throw new LockAcquisitionException("락 획득 시간 초과: " + lockKey);
             }
-
-            log.debug("Lock acquired: {}", lockKey);
-
             return joinPoint.proceed();
 
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            log.error("Lock acquisition interrupted: {}", lockKey, e);
             throw new LockAcquisitionException("락 획득 중 인터럽트 발생: " + lockKey);
         } finally {
             if (lock.isHeldByCurrentThread()) {
                 lock.unlock();
-                log.debug("Lock released: {}", lockKey);
             }
         }
     }
