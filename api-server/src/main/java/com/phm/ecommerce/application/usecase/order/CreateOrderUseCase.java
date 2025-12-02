@@ -1,5 +1,6 @@
 package com.phm.ecommerce.application.usecase.order;
 
+import com.phm.ecommerce.application.lock.MultiDistributedLock;
 import com.phm.ecommerce.domain.cart.CartItem;
 import com.phm.ecommerce.domain.coupon.Coupon;
 import com.phm.ecommerce.domain.coupon.UserCoupon;
@@ -18,17 +19,14 @@ import com.phm.ecommerce.infrastructure.repository.PointRepository;
 import com.phm.ecommerce.infrastructure.repository.PointTransactionRepository;
 import com.phm.ecommerce.infrastructure.repository.ProductRepository;
 import com.phm.ecommerce.infrastructure.repository.UserCouponRepository;
-import jakarta.persistence.OptimisticLockException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.orm.ObjectOptimisticLockingFailureException;
-import org.springframework.retry.annotation.Backoff;
-import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -55,34 +53,28 @@ public class CreateOrderUseCase {
       Long cartItemId,
       Long userCouponId) {}
 
+  @MultiDistributedLock(lockKeyProvider = "prepareLockKeys")
   @Transactional
-  @Retryable(
-      retryFor = {OptimisticLockException.class, ObjectOptimisticLockingFailureException.class},
-      maxAttempts = 10,
-      backoff = @Backoff(delay = 100, multiplier = 1.5)
-  )
   public Output execute(Input request) {
     log.info("주문 생성 시작 - userId: {}, cartItemCount: {}",
         request.userId(), request.cartItemCouponMaps().size());
 
     List<CartItem> cartItems = new ArrayList<>();
+    Map<Long, Long> cartItemCouponMap = new HashMap<>();
+
     for (CartItemCouponInfo map : request.cartItemCouponMaps()) {
       CartItem cartItem = cartItemRepository.findByIdOrThrow(map.cartItemId());
-
       cartItem.validateOwnership(request.userId());
       cartItems.add(cartItem);
+
+      if (map.userCouponId() != null) {
+        cartItemCouponMap.put(map.cartItemId(), map.userCouponId());
+      }
     }
 
     if (cartItems.isEmpty()) {
       log.warn("주문 실패 - 장바구니가 비어있음. userId: {}", request.userId());
       throw new EmptyCartException();
-    }
-
-    Map<Long, Long> cartItemCouponMap = new HashMap<>();
-    if (request.cartItemCouponMaps() != null) {
-      for (CartItemCouponInfo map : request.cartItemCouponMaps()) {
-        cartItemCouponMap.put(map.cartItemId(), map.userCouponId());
-      }
     }
 
     List<OrderItemData> orderItemDataList = new ArrayList<>();
@@ -178,6 +170,27 @@ public class CreateOrderUseCase {
         order.getFinalAmount(),
         order.getCreatedAt(),
         orderItemInfos);
+  }
+
+  private List<String> prepareLockKeys(Input request) {
+    List<String> lockKeys = new ArrayList<>();
+
+    List<CartItem> cartItems = new ArrayList<>();
+    for (CartItemCouponInfo map : request.cartItemCouponMaps()) {
+      CartItem cartItem = cartItemRepository.findByIdOrThrow(map.cartItemId());
+      cartItem.validateOwnership(request.userId());
+      cartItems.add(cartItem);
+    }
+
+    cartItems.stream()
+        .map(CartItem::getProductId)
+        .distinct()
+        .forEach(productId -> lockKeys.add("product:" + productId));
+
+    lockKeys.add("point:user:" + request.userId());
+
+    log.debug("락 키 준비 완료 - lockKeys: {}", lockKeys);
+    return lockKeys;
   }
 
   public record Output(

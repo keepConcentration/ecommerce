@@ -1,5 +1,6 @@
 package com.phm.ecommerce.application.usecase.coupon;
 
+import com.phm.ecommerce.application.lock.DistributedLock;
 import com.phm.ecommerce.domain.coupon.Coupon;
 import com.phm.ecommerce.domain.coupon.UserCoupon;
 import com.phm.ecommerce.domain.coupon.exception.CouponAlreadyIssuedException;
@@ -25,6 +26,7 @@ public class IssueCouponUseCase {
       Long couponId,
       Long userId) {}
 
+  @DistributedLock(key = "'coupon:' + #request.couponId()", fair = true)
   @Transactional
   public Output execute(Input request) {
     log.info("쿠폰 발급 시작 - userId: {}, couponId: {}", request.userId(), request.couponId());
@@ -38,7 +40,7 @@ public class IssueCouponUseCase {
     }
 
     try {
-      Coupon coupon = couponRepository.findByIdWithLockOrThrow(request.couponId());
+      Coupon coupon = couponRepository.findByIdOrThrow(request.couponId());
       UserCoupon userCoupon = issue(request.userId(), coupon);
 
       log.info("쿠폰 발급 완료 - userCouponId: {}, userId: {}, couponId: {}",

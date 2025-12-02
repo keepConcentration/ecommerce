@@ -1,16 +1,12 @@
 package com.phm.ecommerce.application.usecase.point;
 
+import com.phm.ecommerce.application.lock.DistributedLock;
 import com.phm.ecommerce.domain.point.Point;
 import com.phm.ecommerce.domain.point.PointTransaction;
 import com.phm.ecommerce.infrastructure.repository.PointRepository;
 import com.phm.ecommerce.infrastructure.repository.PointTransactionRepository;
 import lombok.RequiredArgsConstructor;
-import jakarta.persistence.OptimisticLockException;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.orm.ObjectOptimisticLockingFailureException;
-import org.springframework.retry.annotation.Backoff;
-import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -28,12 +24,8 @@ public class ChargePointsUseCase {
       Long userId,
       Long amount) {}
 
+  @DistributedLock(key = "'point:user:' + #request.userId()")
   @Transactional
-  @Retryable(
-      retryFor = {OptimisticLockException.class, ObjectOptimisticLockingFailureException.class, DataIntegrityViolationException.class},
-      maxAttempts = 20,
-      backoff = @Backoff(delay = 100, maxDelay = 1000, multiplier = 1.5)
-  )
   public Output execute(Input request) {
     log.info("포인트 충전 시작 - userId: {}, chargeAmount: {}", request.userId(), request.amount());
 
