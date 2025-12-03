@@ -4,7 +4,6 @@ import com.phm.ecommerce.domain.common.BaseEntity;
 import com.phm.ecommerce.domain.product.exception.InsufficientStockException;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.Index;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -78,18 +77,6 @@ public class Product extends BaseEntity {
     this.salesCount += count;
     log.debug("판매량 증가 - productId: {}, count: {}, totalSalesCount: {}",
         this.getId(), count, this.salesCount);
-  }
-
-  public void decreaseSalesCount(Long count) {
-    if (this.salesCount >= count) {
-      this.salesCount -= count;
-      log.debug("판매량 감소 (롤백) - productId: {}, count: {}, totalSalesCount: {}",
-          this.getId(), count, this.salesCount);
-    } else {
-      log.warn("판매량 롤백 불가 - productId: {}, requestedCount: {}, currentSalesCount: {}",
-          this.getId(), count, this.salesCount);
-      this.salesCount = 0L;
-    }
   }
 
   public Double getPopularityScore() {

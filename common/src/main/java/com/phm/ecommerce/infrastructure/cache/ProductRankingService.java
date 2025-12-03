@@ -61,6 +61,6 @@ public class ProductRankingService {
       return null;
     });
 
-    log.info("Bulk 랭킹 업데이트 완료: date={}, {} 개 상품", date, products.size());
+    log.info("랭킹 업데이트 완료: date={}, {} 개 상품", date, products.size());
   }
 }
