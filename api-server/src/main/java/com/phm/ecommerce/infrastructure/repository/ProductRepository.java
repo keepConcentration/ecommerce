@@ -17,7 +17,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
   @Query("SELECT p FROM Product p WHERE p.id IN :ids")
   List<Product> findAllByIds(@Param("ids") List<Long> ids);
 
-  @Query(value = "SELECT * FROM products ORDER BY popularity_score DESC LIMIT :limit", nativeQuery = true)
+  @Query(value = "SELECT * FROM products ORDER BY (view_count * 0.1 + sales_count * 0.9) DESC LIMIT :limit", nativeQuery = true)
   List<Product> findTopByPopularityScore(@Param("limit") int limit);
 
   default List<Product> findPopularProducts(int limit) {

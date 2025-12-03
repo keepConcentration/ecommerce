@@ -10,9 +10,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Entity
-@Table(name = "products", indexes = {
-    @Index(name = "idx_popularity_score", columnList = "popularityScore")
-})
+@Table(name = "products")
 @Slf4j
 @Getter
 public class Product extends BaseEntity {
@@ -32,34 +30,29 @@ public class Product extends BaseEntity {
   @Column(nullable = false)
   private Long salesCount;
 
-  @Column(nullable = false)
-  private Double popularityScore;
-
   protected Product() {
     super();
   }
 
-  private Product(Long id, String name, Long price, Long quantity, Long viewCount, Long salesCount, Double popularityScore) {
+  private Product(Long id, String name, Long price, Long quantity, Long viewCount, Long salesCount) {
     super(id);
     this.name = name;
     this.price = price;
     this.quantity = quantity;
     this.viewCount = viewCount != null ? viewCount : 0L;
     this.salesCount = salesCount != null ? salesCount : 0L;
-    this.popularityScore = popularityScore != null ? popularityScore : calculatePopularityScore();
   }
 
   public static Product create(String name, Long price, Long quantity) {
-    return new Product(null, name, price, quantity, 0L, 0L, 0.0);
+    return new Product(null, name, price, quantity, 0L, 0L);
   }
 
   public static Product reconstruct(Long id, String name, Long price, Long quantity, Long viewCount, Long salesCount) {
-    return new Product(id, name, price, quantity, viewCount, salesCount, null);
+    return new Product(id, name, price, quantity, viewCount, salesCount);
   }
 
   public void increaseViewCount() {
     this.viewCount++;
-    updatePopularityScore();
   }
 
   public void decreaseStock(Long stock) {
@@ -83,30 +76,23 @@ public class Product extends BaseEntity {
 
   public void increaseSalesCount(Long count) {
     this.salesCount += count;
-    updatePopularityScore();
-    log.debug("판매량 증가 - productId: {}, count: {}, totalSalesCount: {}, popularityScore: {}",
-        this.getId(), count, this.salesCount, this.popularityScore);
+    log.debug("판매량 증가 - productId: {}, count: {}, totalSalesCount: {}",
+        this.getId(), count, this.salesCount);
   }
 
   public void decreaseSalesCount(Long count) {
     if (this.salesCount >= count) {
       this.salesCount -= count;
-      updatePopularityScore();
-      log.debug("판매량 감소 (롤백) - productId: {}, count: {}, totalSalesCount: {}, popularityScore: {}",
-          this.getId(), count, this.salesCount, this.popularityScore);
+      log.debug("판매량 감소 (롤백) - productId: {}, count: {}, totalSalesCount: {}",
+          this.getId(), count, this.salesCount);
     } else {
       log.warn("판매량 롤백 불가 - productId: {}, requestedCount: {}, currentSalesCount: {}",
           this.getId(), count, this.salesCount);
       this.salesCount = 0L;
-      updatePopularityScore();
     }
   }
 
-  private Double calculatePopularityScore() {
+  public Double getPopularityScore() {
     return (this.viewCount * 0.1) + (this.salesCount * 0.9);
-  }
-
-  private void updatePopularityScore() {
-    this.popularityScore = calculatePopularityScore();
   }
 }

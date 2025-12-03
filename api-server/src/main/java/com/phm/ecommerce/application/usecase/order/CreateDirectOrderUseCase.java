@@ -1,6 +1,7 @@
 package com.phm.ecommerce.application.usecase.order;
 
 import com.phm.ecommerce.application.lock.MultiDistributedLock;
+import com.phm.ecommerce.application.service.ProductService;
 import com.phm.ecommerce.domain.coupon.Coupon;
 import com.phm.ecommerce.domain.coupon.UserCoupon;
 import com.phm.ecommerce.domain.order.Order;
@@ -30,6 +31,7 @@ import java.util.List;
 public class CreateDirectOrderUseCase {
 
   private final ProductRepository productRepository;
+  private final ProductService productService;
   private final UserCouponRepository userCouponRepository;
   private final CouponRepository couponRepository;
   private final PointRepository pointRepository;
@@ -49,7 +51,7 @@ public class CreateDirectOrderUseCase {
     Product product = productRepository.findByIdOrThrow(request.productId());
     product.decreaseStock(request.quantity());
     product.increaseSalesCount(request.quantity());
-    product = productRepository.save(product);
+    product = productService.saveProduct(product);
 
     log.debug("재고 차감 완료 - productId: {}, quantity: {}, remainingStock: {}",
         request.productId(), request.quantity(), product.getQuantity());

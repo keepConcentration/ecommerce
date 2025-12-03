@@ -1,6 +1,7 @@
 package com.phm.ecommerce.application.aspect;
 
 import com.phm.ecommerce.domain.product.Product;
+import com.phm.ecommerce.infrastructure.cache.EvictProductCache;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.annotation.AfterReturning;
@@ -18,10 +19,10 @@ public class ProductCacheEvictAspect {
   private final CacheManager cacheManager;
 
   @AfterReturning(
-      pointcut = "execution(* com.phm.ecommerce.infrastructure.repository.ProductRepository.save(..)) && args(product)",
+      pointcut = "@annotation(EvictProductCache)",
       returning = "savedProduct"
   )
-  public void evictProductCacheAfterSave(Product product, Product savedProduct) {
+  public void evictProductCacheAfterSave(Product savedProduct) {
     Long productId = savedProduct.getId();
     log.info("상품 저장 - 캐시 무효화: productId={}", productId);
 

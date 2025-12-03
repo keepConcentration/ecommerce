@@ -1,8 +1,10 @@
 package com.phm.ecommerce.presentation.mapper;
 
 import com.phm.ecommerce.application.usecase.product.GetPopularProductsUseCase;
+import com.phm.ecommerce.application.usecase.product.GetPopularProductsUseCase.Input;
 import com.phm.ecommerce.application.usecase.product.GetProductByIdUseCase;
 import com.phm.ecommerce.application.usecase.product.GetProductsUseCase;
+import com.phm.ecommerce.presentation.dto.request.PopularProductRequest;
 import com.phm.ecommerce.presentation.dto.response.PageResponse;
 import com.phm.ecommerce.presentation.dto.response.PopularProductResponse;
 import com.phm.ecommerce.presentation.dto.response.ProductResponse;
@@ -61,9 +63,15 @@ public class ProductMapper {
             output.quantity(),
             output.viewCount(),
             output.salesCount(),
-            output.popularityScore(),
             output.createdAt(),
             output.updatedAt()))
         .toList();
+  }
+
+  public Input toInput(PopularProductRequest request) {
+    return new GetPopularProductsUseCase.Input(
+        request.date(),
+        request.limit()
+    );
   }
 }

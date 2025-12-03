@@ -4,6 +4,7 @@ import com.phm.ecommerce.application.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -13,14 +14,19 @@ public class GetPopularProductsUseCase {
 
   private final ProductService productService;
 
-  private static final int DEFAULT_LIMIT = 5;
-
-  public List<Output> execute() {
-    return execute(DEFAULT_LIMIT);
+  public record Input(
+      LocalDate date,
+      Integer limit
+  ) {
+    public Input {
+      if (date == null) {
+        date = LocalDate.now();
+      }
+    }
   }
 
-  public List<Output> execute(int limit) {
-    ProductService.ProductIdList productIdList = productService.getPopularProductIds(limit);
+  public List<Output> execute(Input input) {
+    ProductService.ProductIdList productIdList = productService.getPopularProductIds(input.date(), input.limit());
 
     return productIdList.ids().stream()
         .map(productId -> {
@@ -32,7 +38,6 @@ public class GetPopularProductsUseCase {
               product.quantity(),
               product.viewCount(),
               product.salesCount(),
-              product.popularityScore(),
               product.createdAt(),
               product.updatedAt()
           );
@@ -47,7 +52,6 @@ public class GetPopularProductsUseCase {
       Long quantity,
       Long viewCount,
       Long salesCount,
-      Double popularityScore,
       LocalDateTime createdAt,
       LocalDateTime updatedAt
   ) {}
