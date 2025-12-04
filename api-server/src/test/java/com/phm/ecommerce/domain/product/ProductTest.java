@@ -146,48 +146,6 @@ class ProductTest {
   }
 
   @Test
-  @DisplayName("판매량 감소 - 성공")
-  void decreaseSalesCount_Success() {
-    // given
-    Product product = Product.create("상품", 10000L, 100L);
-    product.increaseSalesCount(50L);
-
-    // when
-    product.decreaseSalesCount(20L);
-
-    // then
-    assertThat(product.getSalesCount()).isEqualTo(30L);
-  }
-
-  @Test
-  @DisplayName("판매량 감소 - 경계값 테스트 (정확히 0)")
-  void decreaseSalesCount_ExactZero() {
-    // given
-    Product product = Product.create("상품", 10000L, 100L);
-    product.increaseSalesCount(30L);
-
-    // when
-    product.decreaseSalesCount(30L);
-
-    // then
-    assertThat(product.getSalesCount()).isEqualTo(0L);
-  }
-
-  @Test
-  @DisplayName("판매량 감소 - 판매량보다 큰 값 감소")
-  void decreaseSalesCount_MoreThanSalesCount() {
-    // given
-    Product product = Product.create("상품", 10000L, 100L);
-    product.increaseSalesCount(20L);
-
-    // when
-    product.decreaseSalesCount(50L);
-
-    // then
-    assertThat(product.getSalesCount()).isEqualTo(0L);
-  }
-
-  @Test
   @DisplayName("인기도 점수 계산")
   void calculatePopularityScore() {
     // given
