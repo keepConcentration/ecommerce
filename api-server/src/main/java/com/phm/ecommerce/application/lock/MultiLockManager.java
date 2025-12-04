@@ -34,9 +34,10 @@ public class MultiLockManager {
                 .toArray(RLock[]::new);
 
         RedissonMultiLock multiLock = new RedissonMultiLock(locks);
+        boolean acquired = false;
 
         try {
-            boolean acquired = multiLock.tryLock(
+            acquired = multiLock.tryLock(
                     WAIT_TIME_SECONDS,
                     LEASE_TIME_SECONDS,
                     TimeUnit.SECONDS
@@ -56,9 +57,13 @@ public class MultiLockManager {
             log.error("MultiLock 획득 중 인터럽트 - lockKeys: {}", sortedLockKeys, e);
             throw new LockAcquisitionException("락 획득 중 인터럽트 발생: " + sortedLockKeys);
         } finally {
-            if (multiLock.isHeldByCurrentThread()) {
-                multiLock.unlock();
-                log.debug("MultiLock 해제 완료 - lockCount: {}", locks.length);
+            if (acquired) {
+                try {
+                    multiLock.unlock();
+                    log.debug("MultiLock 해제 완료 - lockCount: {}", locks.length);
+                } catch (IllegalMonitorStateException e) {
+                    log.warn("MultiLock 해제 시 예외 발생 - lockKeys: {}", sortedLockKeys);
+                }
             }
         }
     }
