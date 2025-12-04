@@ -1,5 +1,6 @@
 package com.phm.ecommerce.application.service;
 
+import com.phm.ecommerce.application.lock.DistributedLock;
 import com.phm.ecommerce.domain.product.Product;
 import com.phm.ecommerce.infrastructure.cache.EvictProductCache;
 import com.phm.ecommerce.infrastructure.cache.ProductRankingService;
@@ -44,19 +45,28 @@ public class ProductService {
 
     if (ids.isEmpty()) {
       log.warn("Redis 랭킹 데이터 없음 - DB에서 조회: limit={}", limit);
-      ids = initializeRankingFromDatabase(limit);
+      ids = initializeRankingFromDatabaseWithLock(limit);
     }
 
     return new ProductIdList(ids);
   }
 
-  private List<Long> initializeRankingFromDatabase(int limit) {
+  @DistributedLock(key = "'product:ranking:init'")
+  private List<Long> initializeRankingFromDatabaseWithLock(int limit) {
+    log.info("분산 락 획득 - Redis 랭킹 초기화 시작");
+
+    List<Long> ids = productRankingService.getTopProductIds(limit);
+    if (!ids.isEmpty()) {
+      log.info("다른 스레드에서 초기화 완료");
+      return ids;
+    }
+
     log.warn("Redis 랭킹 데이터 없음 - DB에서 직접 조회");
     List<Product> products = productRepository.findPopularProducts(limit);
 
     productRankingService.updateRanking(products);
 
-    List<Long> ids = products.stream()
+    ids = products.stream()
         .map(Product::getId)
         .toList();
 
