@@ -14,6 +14,8 @@ public class GetPopularProductsUseCase {
 
   private final ProductService productService;
 
+  private static final int DEFAULT_LIMIT = 5;
+
   public record Input(
       LocalDate date,
       Integer limit
@@ -21,6 +23,9 @@ public class GetPopularProductsUseCase {
     public Input {
       if (date == null) {
         date = LocalDate.now();
+      }
+      if (limit == null) {
+        limit = DEFAULT_LIMIT;
       }
     }
   }
