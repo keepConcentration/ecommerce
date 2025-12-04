@@ -1,0 +1,14 @@
+ spring:
+  main:
+    allow-bean-definition-overriding: true
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        format_sql: true
+        show_sql: false
+
+logging:
+  level:
+    com.phm.ecommerce: DEBUG
