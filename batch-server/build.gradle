@@ -28,6 +28,7 @@ dependencies {
 	implementation project(':common')
 
     implementation 'org.springframework.boot:spring-boot-starter'
+    implementation 'org.springframework.boot:spring-boot-starter-aop'
 
     compileOnly 'org.projectlombok:lombok'
 	runtimeOnly 'com.mysql:mysql-connector-j'
