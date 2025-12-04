@@ -1,11 +1,9 @@
 package com.phm.ecommerce.application.service;
 
 import com.phm.ecommerce.domain.product.Product;
-import com.phm.ecommerce.domain.product.exception.InvalidDateRangeException;
 import com.phm.ecommerce.infrastructure.cache.EvictProductCache;
 import com.phm.ecommerce.infrastructure.cache.ProductRankingService;
 import com.phm.ecommerce.infrastructure.repository.ProductRepository;
-import java.time.LocalDate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
@@ -39,41 +37,30 @@ public class ProductService {
     );
   }
 
-  public ProductIdList getPopularProductIds(LocalDate date, int limit) {
-    validateDateRange(date);
+  public ProductIdList getPopularProductIds(int limit) {
+    log.info("인기 상품 ID 조회 시작: limit={}", limit);
 
-    log.info("인기 상품 ID 조회 시작: date={}, limit={}", date, limit);
-
-    List<Long> ids = productRankingService.getTopProductIds(date, limit);
+    List<Long> ids = productRankingService.getTopProductIds(limit);
 
     if (ids.isEmpty()) {
-      log.warn("Redis 랭킹 데이터 없음 - DB에서 조회하여 Redis 초기화: date={}", date);
-      ids = initializeRankingFromDatabase(date, limit);
+      log.warn("Redis 랭킹 데이터 없음 - DB에서 조회: limit={}", limit);
+      ids = initializeRankingFromDatabase(limit);
     }
 
     return new ProductIdList(ids);
   }
 
-  private void validateDateRange(LocalDate date) {
-    LocalDate now = LocalDate.now();
-    LocalDate minDate = now.minusDays(7);
-    LocalDate maxDate = now.plusDays(1);
-
-    if (date.isBefore(minDate) || date.isAfter(maxDate)) {
-      log.warn("유효하지 않은 날짜 범위 요청: date={}, 허용 범위=[{} ~ {}]", date, minDate, maxDate);
-      throw new InvalidDateRangeException();
-    }
-  }
-
-  private List<Long> initializeRankingFromDatabase(LocalDate date, int limit) {
-    log.warn("Redis 랭킹 데이터 없음 - DB에서 직접 조회: date={}", date);
+  private List<Long> initializeRankingFromDatabase(int limit) {
+    log.warn("Redis 랭킹 데이터 없음 - DB에서 직접 조회");
     List<Product> products = productRepository.findPopularProducts(limit);
+
+    productRankingService.updateRanking(products);
 
     List<Long> ids = products.stream()
         .map(Product::getId)
         .toList();
 
-    log.info("Redis 랭킹 초기화 완료: date={}, {} 개 상품 등록", date, ids.size());
+    log.info("Redis 랭킹 초기화 완료: {} 개 상품 등록", ids.size());
     return ids;
   }
 

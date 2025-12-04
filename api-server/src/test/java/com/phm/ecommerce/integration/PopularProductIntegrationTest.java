@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cache.CacheManager;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
@@ -57,6 +58,9 @@ class PopularProductIntegrationTest extends TestContainerSupport {
   @Autowired
   private CacheManager cacheManager;
 
+  @Autowired
+  private RedisTemplate<String, Object> redisTemplate;
+
   private User user;
   private Product product1;
   private Product product2;
@@ -64,6 +68,9 @@ class PopularProductIntegrationTest extends TestContainerSupport {
 
   @BeforeEach
   void setUp() {
+    // Redis 랭킹 데이터 초기화
+    redisTemplate.delete("product:ranking:total");
+
     // 사용자 생성
     user = User.create();
     user = userRepository.save(user);
@@ -110,7 +117,6 @@ class PopularProductIntegrationTest extends TestContainerSupport {
     createOrder(user.getId(), product2.getId(), 30L);
     createOrder(user.getId(), product3.getId(), 100L);
 
-    cacheManager.getCache("popularProductIds").clear();
     cacheManager.getCache("product").clear();
 
     // when & then
@@ -139,7 +145,6 @@ class PopularProductIntegrationTest extends TestContainerSupport {
     }
     productRepository.save(product1);
 
-    cacheManager.getCache("popularProductIds").clear();
     cacheManager.getCache("product").clear();
 
     // when & then

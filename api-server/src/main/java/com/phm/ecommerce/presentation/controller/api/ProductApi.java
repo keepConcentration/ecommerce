@@ -59,7 +59,7 @@ public interface ProductApi {
   @GetMapping("/popular")
   @Operation(
       summary = "인기 상품 조회",
-      description = "조회수와 판매량에 가중치를 적용한 인기 상품 목록을 조회합니다. ")
+      description = "조회수와 판매량에 가중치를 적용한 인기 상품 목록을 조회합니다.")
   @ApiResponses(
       value = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(

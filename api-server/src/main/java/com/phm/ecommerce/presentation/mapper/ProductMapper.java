@@ -69,9 +69,6 @@ public class ProductMapper {
   }
 
   public Input toInput(PopularProductRequest request) {
-    return new GetPopularProductsUseCase.Input(
-        request.date(),
-        request.limit()
-    );
+    return new GetPopularProductsUseCase.Input(request.limit());
   }
 }
