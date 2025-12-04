@@ -88,4 +88,17 @@ public class CouponQueueService {
     String[] parts = member.split(":");
     return Long.parseLong(parts[1]);
   }
+
+  public void clearQueue(Long couponId) {
+    String queueKey = RedisCacheKeys.couponQueue(couponId);
+    String sequenceKey = RedisCacheKeys.couponQueueSequence(couponId);
+
+    Long queueSize = redisTemplate.opsForZSet().zCard(queueKey);
+    redisTemplate.delete(queueKey);
+    redisTemplate.delete(sequenceKey);
+
+    if (queueSize != null && queueSize > 0) {
+      log.info("쿠폰 대기 큐 클리어 - couponId: {}, 삭제된 요청 수: {}", couponId, queueSize);
+    }
+  }
 }

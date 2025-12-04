@@ -19,7 +19,7 @@ public class CouponIssueService {
   private final UserCouponRepository userCouponRepository;
 
   @Transactional
-  public boolean issueCoupon(Long couponId, Long userId) {
+  public Boolean issueCoupon(Long couponId, Long userId) {
     try {
       boolean alreadyIssued = userCouponRepository.existsByUserIdAndCouponId(userId, couponId);
       if (alreadyIssued) {
@@ -30,7 +30,7 @@ public class CouponIssueService {
       Coupon coupon = couponRepository.findByIdOrThrow(couponId);
       if (!coupon.canIssue()) {
         log.warn("쿠폰 재고 소진 - couponId: {}, userId: {}", couponId, userId);
-        return false;
+        return null;
       }
 
       coupon.issue();

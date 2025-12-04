@@ -63,6 +63,7 @@ public class CouponIssueBatchScheduler {
 
     int successCount = 0;
     int failCount = 0;
+    boolean stockExhausted = false;
 
     for (ZSetOperations.TypedTuple<Object> request : requests) {
       try {
@@ -74,9 +75,13 @@ public class CouponIssueBatchScheduler {
         Long userId = couponQueueService.extractUserId(member);
         Long extractedCouponId = couponQueueService.extractCouponId(member);
 
-        boolean issued = couponIssueService.issueCoupon(extractedCouponId, userId);
+        Boolean issued = couponIssueService.issueCoupon(extractedCouponId, userId);
 
-        if (issued) {
+        if (issued == null) {
+          stockExhausted = true;
+          log.warn("쿠폰 재고 소진 - couponId: {}, 배치 처리 중단", couponId);
+          break;
+        } else if (issued) {
           successCount++;
         } else {
           failCount++;
@@ -88,8 +93,14 @@ public class CouponIssueBatchScheduler {
       }
     }
 
-    log.info("쿠폰 발급 큐 처리 완료 - couponId: {}, 성공: {}, 실패: {}",
-        couponId, successCount, failCount);
+    if (stockExhausted) {
+      couponQueueService.clearQueue(couponId);
+      log.info("쿠폰 발급 재고 소진으로 큐 클리어 - couponId: {}, 성공: {}, 실패: {}",
+          couponId, successCount, failCount);
+    } else {
+      log.info("쿠폰 발급 큐 처리 완료 - couponId: {}, 성공: {}, 실패: {}",
+          couponId, successCount, failCount);
+    }
   }
 
   private String prepareLockKey(Long couponId) {
