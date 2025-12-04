@@ -1,6 +1,7 @@
 package com.phm.ecommerce.application.usecase.point;
 
 import com.phm.ecommerce.application.lock.DistributedLock;
+import com.phm.ecommerce.application.lock.RedisLockKeys;
 import com.phm.ecommerce.domain.point.Point;
 import com.phm.ecommerce.domain.point.PointTransaction;
 import com.phm.ecommerce.infrastructure.repository.PointRepository;
@@ -24,7 +25,7 @@ public class ChargePointsUseCase {
       Long userId,
       Long amount) {}
 
-  @DistributedLock(key = "'point:user:' + #request.userId()")
+  @DistributedLock(lockKeyProvider = "prepareLockKey")
   @Transactional
   public Output execute(Input request) {
     log.info("포인트 충전 시작 - userId: {}, chargeAmount: {}", request.userId(), request.amount());
@@ -53,6 +54,10 @@ public class ChargePointsUseCase {
         transaction.getId(),
         transaction.getCreatedAt()
     );
+  }
+
+  private String prepareLockKey(Input request) {
+    return RedisLockKeys.pointUser(request.userId());
   }
 
   public record Output(

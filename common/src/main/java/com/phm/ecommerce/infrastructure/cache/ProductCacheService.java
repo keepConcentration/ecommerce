@@ -22,7 +22,6 @@ public class ProductCacheService {
   private final ProductRepository productRepository;
   private final RedisTemplate<String, Object> redisTemplate;
 
-  private static final String PRODUCT_CACHE_KEY_PREFIX = "product:";
   private static final Duration CACHE_TTL = Duration.ofMinutes(30);
 
   public List<ProductInfo> getProductsByIds(List<Long> productIds) {
@@ -34,7 +33,7 @@ public class ProductCacheService {
     List<ProductInfo> cachedProducts = new ArrayList<>();
 
     for (Long productId : productIds) {
-      String cacheKey = PRODUCT_CACHE_KEY_PREFIX + productId;
+      String cacheKey = RedisCacheKeys.productCache(productId);
       ProductInfo cached = (ProductInfo) redisTemplate.opsForValue().get(cacheKey);
 
       if (cached != null) {
@@ -56,7 +55,7 @@ public class ProductCacheService {
           .map(product -> {
             ProductInfo info = toProductInfo(product);
 
-            String cacheKey = PRODUCT_CACHE_KEY_PREFIX + product.getId();
+            String cacheKey = RedisCacheKeys.productCache(product.getId());
             redisTemplate.opsForValue().set(cacheKey, info, CACHE_TTL);
 
             return info;
@@ -78,7 +77,7 @@ public class ProductCacheService {
   }
 
   public void evictProductCache(Long productId) {
-    String cacheKey = PRODUCT_CACHE_KEY_PREFIX + productId;
+    String cacheKey = RedisCacheKeys.productCache(productId);
     Boolean deleted = redisTemplate.delete(cacheKey);
     log.debug("상품 캐시 삭제: productId={}, deleted={}", productId, deleted);
   }

@@ -1,6 +1,7 @@
 package com.phm.ecommerce.infrastructure.scheduler;
 
 import com.phm.ecommerce.application.lock.DistributedLock;
+import com.phm.ecommerce.application.lock.RedisLockKeys;
 import com.phm.ecommerce.domain.product.Product;
 import com.phm.ecommerce.infrastructure.cache.ProductRankingService;
 import com.phm.ecommerce.infrastructure.repository.ProductRepository;
@@ -22,7 +23,7 @@ public class ProductRankingScheduler {
   private static final int TOP_PRODUCTS_LIMIT = 100;
 
   @Scheduled(fixedDelay = 600000, initialDelay = 10000) // 시작후 10초 후, 10분마다 실행
-  @DistributedLock(key = "'product:ranking:update'", waitTime = 10L, leaseTime = 30L)
+  @DistributedLock(lockKeyProvider = "prepareLockKey", waitTime = 10L, leaseTime = 30L)
   public void syncProductRankingToRedis() {
     try {
       log.info("총 인기 상품 랭킹 동기화 시작");
@@ -36,5 +37,9 @@ public class ProductRankingScheduler {
     } catch (Exception e) {
       log.error("총 인기 상품 랭킹 동기화 실패", e);
     }
+  }
+
+  private String prepareLockKey() {
+    return RedisLockKeys.rankingUpdate();
   }
 }

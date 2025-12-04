@@ -1,6 +1,7 @@
 package com.phm.ecommerce.application.usecase.coupon;
 
 import com.phm.ecommerce.application.lock.DistributedLock;
+import com.phm.ecommerce.application.lock.RedisLockKeys;
 import com.phm.ecommerce.domain.coupon.Coupon;
 import com.phm.ecommerce.domain.coupon.UserCoupon;
 import com.phm.ecommerce.domain.coupon.exception.CouponAlreadyIssuedException;
@@ -26,7 +27,7 @@ public class IssueCouponUseCase {
       Long couponId,
       Long userId) {}
 
-  @DistributedLock(key = "'coupon:' + #request.couponId()", fair = true)
+  @DistributedLock(lockKeyProvider = "prepareLockKey", fair = true)
   @Transactional
   public Output execute(Input request) {
     log.info("쿠폰 발급 시작 - userId: {}, couponId: {}", request.userId(), request.couponId());
@@ -60,6 +61,10 @@ public class IssueCouponUseCase {
           request.userId(), request.couponId());
       throw new CouponAlreadyIssuedException();
     }
+  }
+
+  private String prepareLockKey(Input request) {
+    return RedisLockKeys.coupon(request.couponId());
   }
 
   private UserCoupon issue(Long userId, Coupon coupon) {

@@ -5,6 +5,7 @@ import com.phm.ecommerce.domain.cart.CartItem;
 import com.phm.ecommerce.domain.point.Point;
 import com.phm.ecommerce.domain.product.Product;
 import com.phm.ecommerce.domain.user.User;
+import com.phm.ecommerce.infrastructure.cache.RedisCacheKeys;
 import com.phm.ecommerce.infrastructure.repository.CartItemRepository;
 import com.phm.ecommerce.infrastructure.repository.PointRepository;
 import com.phm.ecommerce.infrastructure.repository.ProductRepository;
@@ -18,7 +19,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cache.CacheManager;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
@@ -56,9 +56,6 @@ class PopularProductIntegrationTest extends TestContainerSupport {
   private CartItemRepository cartItemRepository;
 
   @Autowired
-  private CacheManager cacheManager;
-
-  @Autowired
   private RedisTemplate<String, Object> redisTemplate;
 
   private User user;
@@ -69,7 +66,7 @@ class PopularProductIntegrationTest extends TestContainerSupport {
   @BeforeEach
   void setUp() {
     // Redis 랭킹 데이터 초기화
-    redisTemplate.delete("product:ranking:total");
+    redisTemplate.delete(RedisCacheKeys.PRODUCT_RANKING);
 
     // 사용자 생성
     user = User.create();
@@ -117,7 +114,9 @@ class PopularProductIntegrationTest extends TestContainerSupport {
     createOrder(user.getId(), product2.getId(), 30L);
     createOrder(user.getId(), product3.getId(), 100L);
 
-    cacheManager.getCache("product").clear();
+    redisTemplate.delete(RedisCacheKeys.productCache(product1.getId()));
+    redisTemplate.delete(RedisCacheKeys.productCache(product2.getId()));
+    redisTemplate.delete(RedisCacheKeys.productCache(product3.getId()));
 
     // when & then
     mockMvc
@@ -145,7 +144,7 @@ class PopularProductIntegrationTest extends TestContainerSupport {
     }
     productRepository.save(product1);
 
-    cacheManager.getCache("product").clear();
+    redisTemplate.delete(RedisCacheKeys.productCache(product1.getId()));
 
     // when & then
     mockMvc.perform(get("/api/v1/products/popular"))

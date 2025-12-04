@@ -1,6 +1,7 @@
 package com.phm.ecommerce.application.usecase.order;
 
 import com.phm.ecommerce.application.lock.MultiDistributedLock;
+import com.phm.ecommerce.application.lock.RedisLockKeys;
 import com.phm.ecommerce.application.service.ProductService;
 import com.phm.ecommerce.domain.cart.CartItem;
 import com.phm.ecommerce.domain.coupon.Coupon;
@@ -25,7 +26,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -187,9 +187,9 @@ public class CreateOrderUseCase {
     cartItems.stream()
         .map(CartItem::getProductId)
         .distinct()
-        .forEach(productId -> lockKeys.add("product:" + productId));
+        .forEach(productId -> lockKeys.add(RedisLockKeys.product(productId)));
 
-    lockKeys.add("point:user:" + request.userId());
+    lockKeys.add(RedisLockKeys.pointUser(request.userId()));
 
     log.debug("락 키 준비 완료 - lockKeys: {}", lockKeys);
     return lockKeys;

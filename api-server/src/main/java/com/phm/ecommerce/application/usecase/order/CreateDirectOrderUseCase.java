@@ -1,6 +1,7 @@
 package com.phm.ecommerce.application.usecase.order;
 
 import com.phm.ecommerce.application.lock.MultiDistributedLock;
+import com.phm.ecommerce.application.lock.RedisLockKeys;
 import com.phm.ecommerce.application.service.ProductService;
 import com.phm.ecommerce.domain.coupon.Coupon;
 import com.phm.ecommerce.domain.coupon.UserCoupon;
@@ -128,8 +129,8 @@ public class CreateDirectOrderUseCase {
 
   private List<String> prepareLockKeys(Input request) {
     return List.of(
-        "product:" + request.productId(),
-        "point:user:" + request.userId()
+        RedisLockKeys.product(request.productId()),
+        RedisLockKeys.pointUser(request.userId())
     );
   }
 

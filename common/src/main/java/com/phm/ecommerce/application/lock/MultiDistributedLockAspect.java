@@ -31,10 +31,14 @@ public class MultiDistributedLockAspect {
             return joinPoint.proceed();
         }
 
-        log.debug("MultiDistributedLock 적용 - method: {}, lockKeyCount: {}",
-                joinPoint.getSignature().toShortString(), lockKeys.size());
+        List<String> prefixedLockKeys = lockKeys.stream()
+                .map(key -> "lock:" + key)
+                .toList();
 
-        return multiLockManager.executeWithSortedLocks(lockKeys, () -> {
+        log.debug("MultiDistributedLock 적용 - method: {}, lockKeyCount: {}, lockKeys: {}",
+                joinPoint.getSignature().toShortString(), prefixedLockKeys.size(), prefixedLockKeys);
+
+        return multiLockManager.executeWithSortedLocks(prefixedLockKeys, () -> {
             try {
                 return joinPoint.proceed();
             } catch (Throwable e) {
