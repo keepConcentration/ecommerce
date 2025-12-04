@@ -22,18 +22,17 @@ public class GetProductByIdUseCase {
   public Output execute(Input input) {
     Product product = productRepository.findByIdOrThrow(input.productId());
     product.increaseViewCount();
-    productService.saveProduct(product);
+    product = productService.saveProduct(product);
 
-    ProductService.ProductInfo productInfo = productService.getProduct(input.productId());
     return new Output(
-        productInfo.id(),
-        productInfo.name(),
-        productInfo.price(),
-        productInfo.quantity(),
-        productInfo.viewCount(),
-        productInfo.salesCount(),
-        productInfo.createdAt(),
-        productInfo.updatedAt()
+        product.getId(),
+        product.getName(),
+        product.getPrice(),
+        product.getQuantity(),
+        product.getViewCount(),
+        product.getSalesCount(),
+        product.getCreatedAt(),
+        product.getUpdatedAt()
     );
   }
 
