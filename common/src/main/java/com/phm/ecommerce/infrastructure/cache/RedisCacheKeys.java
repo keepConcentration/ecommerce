@@ -9,6 +9,8 @@ public final class RedisCacheKeys {
   private static final String PRODUCT_PREFIX = "product:";
   private static final String COUPON_QUEUE_PREFIX = "coupon:queue:";
   private static final String COUPON_QUEUE_SEQUENCE_PREFIX = "coupon:queue:sequence:";
+  private static final String COUPON_RETRY_QUEUE_PREFIX = "coupon:retry:queue:";
+  private static final String COUPON_DLQ_PREFIX = "coupon:dlq:";
 
   public static final String PRODUCT_RANKING = "product:ranking:total";
 
@@ -22,5 +24,13 @@ public final class RedisCacheKeys {
 
   public static String couponQueueSequence(Long couponId) {
     return COUPON_QUEUE_SEQUENCE_PREFIX + couponId;
+  }
+
+  public static String couponRetryQueue(Long couponId) {
+    return COUPON_RETRY_QUEUE_PREFIX + couponId;
+  }
+
+  public static String couponDeadLetterQueue(Long couponId) {
+    return COUPON_DLQ_PREFIX + couponId;
   }
 }
