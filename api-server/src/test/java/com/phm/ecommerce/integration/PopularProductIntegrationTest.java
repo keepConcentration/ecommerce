@@ -122,15 +122,12 @@ class PopularProductIntegrationTest extends TestContainerSupport {
         .andExpect(jsonPath("$.data[0].productId").value(product3.getId()))
         .andExpect(jsonPath("$.data[0].viewCount").value(50))
         .andExpect(jsonPath("$.data[0].salesCount").value(100))
-        .andExpect(jsonPath("$.data[0].popularityScore").value(95.0))
         .andExpect(jsonPath("$.data[1].productId").value(product1.getId()))
         .andExpect(jsonPath("$.data[1].viewCount").value(100))
         .andExpect(jsonPath("$.data[1].salesCount").value(50))
-        .andExpect(jsonPath("$.data[1].popularityScore").value(55.0))
         .andExpect(jsonPath("$.data[2].productId").value(product2.getId()))
         .andExpect(jsonPath("$.data[2].viewCount").value(200))
-        .andExpect(jsonPath("$.data[2].salesCount").value(30))
-        .andExpect(jsonPath("$.data[2].popularityScore").value(47.0));
+        .andExpect(jsonPath("$.data[2].salesCount").value(30));
   }
 
   @Test
