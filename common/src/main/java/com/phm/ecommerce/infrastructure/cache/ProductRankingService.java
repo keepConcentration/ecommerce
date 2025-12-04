@@ -41,6 +41,11 @@ public class ProductRankingService {
       return;
     }
 
+    log.info("인기 상품 랭킹 업데이트 시작: {} 개 상품", products.size());
+
+    Long deletedCount = redisTemplate.delete(RANKING_KEY) ? 1L : 0L;
+    log.debug("기존 랭킹 데이터 삭제 완료: {} 개 키 삭제", deletedCount);
+
     redisTemplate.executePipelined((RedisCallback<Object>) connection -> {
       for (Product product : products) {
         redisTemplate.opsForZSet().add(RANKING_KEY, product.getId(), product.getPopularityScore());
