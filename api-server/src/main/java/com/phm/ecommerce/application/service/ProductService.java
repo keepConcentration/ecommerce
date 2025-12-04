@@ -1,12 +1,11 @@
 package com.phm.ecommerce.application.service;
 
 import com.phm.ecommerce.domain.product.Product;
-import com.phm.ecommerce.infrastructure.cache.EvictProductCache;
+import com.phm.ecommerce.infrastructure.cache.ProductCacheService;
 import com.phm.ecommerce.infrastructure.cache.ProductRankingService;
 import com.phm.ecommerce.infrastructure.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -19,22 +18,25 @@ public class ProductService {
 
   private final ProductRepository productRepository;
   private final ProductRankingService productRankingService;
+  private final ProductCacheService productCacheService;
 
-  @Cacheable(value = "product", key = "#productId")
-  public ProductInfo getProduct(Long productId) {
-    log.info("DB에서 상품 조회: productId={}", productId);
-    Product product = productRepository.findByIdOrThrow(productId);
+  public List<ProductInfo> getProductsByIds(List<Long> productIds) {
+    log.info("상품 조회 요청: {} 개", productIds.size());
 
-    return new ProductInfo(
-        product.getId(),
-        product.getName(),
-        product.getPrice(),
-        product.getQuantity(),
-        product.getViewCount(),
-        product.getSalesCount(),
-        product.getCreatedAt(),
-        product.getUpdatedAt()
-    );
+    List<ProductCacheService.ProductInfo> cachedInfos = productCacheService.getProductsByIds(productIds);
+
+    return cachedInfos.stream()
+        .map(info -> new ProductInfo(
+            info.id(),
+            info.name(),
+            info.price(),
+            info.quantity(),
+            info.viewCount(),
+            info.salesCount(),
+            info.createdAt(),
+            info.updatedAt()
+        ))
+        .toList();
   }
 
   public ProductIdList getPopularProductIds(int limit) {
@@ -54,10 +56,15 @@ public class ProductService {
     return new ProductIdList(ids);
   }
 
-  @EvictProductCache
   public Product saveProduct(Product product) {
     log.info("상품 저장: productId={}", product.getId());
-    return productRepository.save(product);
+    Product saved = productRepository.save(product);
+
+    if (saved.getId() != null) {
+      productCacheService.evictProductCache(saved.getId());
+    }
+
+    return saved;
   }
 
   public record ProductIdList(List<Long> ids) {

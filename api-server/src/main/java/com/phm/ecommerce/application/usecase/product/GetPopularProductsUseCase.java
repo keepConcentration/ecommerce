@@ -26,20 +26,19 @@ public class GetPopularProductsUseCase {
   public List<Output> execute(Input input) {
     ProductService.ProductIdList productIdList = productService.getPopularProductIds(input.limit());
 
-    return productIdList.ids().stream()
-        .map(productId -> {
-          ProductService.ProductInfo product = productService.getProduct(productId);
-          return new Output(
-              product.id(),
-              product.name(),
-              product.price(),
-              product.quantity(),
-              product.viewCount(),
-              product.salesCount(),
-              product.createdAt(),
-              product.updatedAt()
-          );
-        })
+    List<ProductService.ProductInfo> products = productService.getProductsByIds(productIdList.ids());
+
+    return products.stream()
+        .map(product -> new Output(
+            product.id(),
+            product.name(),
+            product.price(),
+            product.quantity(),
+            product.viewCount(),
+            product.salesCount(),
+            product.createdAt(),
+            product.updatedAt()
+        ))
         .toList();
   }
 
