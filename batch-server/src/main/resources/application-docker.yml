@@ -1,0 +1,22 @@
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://mysql:3306/ecommerce?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul}
+    username: ${SPRING_DATASOURCE_USERNAME:sa}
+    password: ${SPRING_DATASOURCE_PASSWORD:sa}
+  jpa:
+    hibernate:
+      ddl-auto: update  # Docker 환경에서는 update 사용 (validate에서 변경)
+    properties:
+      hibernate:
+        format_sql: false
+        show_sql: false
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOST:redis}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
+
+logging:
+  level:
+    root: INFO
+    com.phm.ecommerce: INFO
+    org.springframework.scheduling: INFO
