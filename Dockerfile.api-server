@@ -13,8 +13,12 @@ COPY common/build.gradle common/build.gradle
 COPY api-server/build.gradle api-server/build.gradle
 COPY batch-server/build.gradle batch-server/build.gradle
 
-# Download dependencies
-RUN chmod +x ./gradlew && ./gradlew dependencies --no-daemon
+# Fix line endings for gradlew (Windows compatibility) and download dependencies
+RUN apk add --no-cache dos2unix && \
+    dos2unix ./gradlew && \
+    chmod +x ./gradlew && \
+    ./gradlew dependencies --no-daemon && \
+    apk del dos2unix
 
 # Copy common module source
 COPY common/src common/src

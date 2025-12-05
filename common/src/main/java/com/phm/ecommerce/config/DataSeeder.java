@@ -159,8 +159,8 @@ public class DataSeeder implements CommandLineRunner {
 
         productPrices = new long[TOTAL_PRODUCTS + 1];
 
-        String sql = "INSERT INTO products (name, price, quantity, view_count, sales_count, popularity_score, created_at, updated_at) " +
-                "VALUES (?, ?, ?, ?, ?, ?, NOW(), NOW())";
+        String sql = "INSERT INTO products (name, price, quantity, view_count, sales_count, created_at, updated_at) " +
+                "VALUES (?, ?, ?, ?, ?, NOW(), NOW())";
 
         jdbcTemplate.execute("SET FOREIGN_KEY_CHECKS = 0");
 
@@ -180,7 +180,6 @@ public class DataSeeder implements CommandLineRunner {
                     int index = finalBatchStart + i;
                     long viewCount = random.nextLong(10000);
                     long salesCount = random.nextLong(5000);
-                    double popularityScore = (viewCount * 0.1) + (salesCount * 0.9);
                     long price = 1000 + random.nextLong(99000);
 
                     productPrices[index + 1] = price;
@@ -190,7 +189,6 @@ public class DataSeeder implements CommandLineRunner {
                     ps.setLong(3, 100 + random.nextLong(900));
                     ps.setLong(4, viewCount);
                     ps.setLong(5, salesCount);
-                    ps.setDouble(6, popularityScore);
                 }
 
                 @Override
