@@ -39,7 +39,6 @@ public class GetProductsUseCase {
         product.getQuantity(),
         product.getViewCount(),
         product.getSalesCount(),
-        product.getPopularityScore(),
         product.getCreatedAt(),
         product.getUpdatedAt()
     ));
@@ -52,7 +51,6 @@ public class GetProductsUseCase {
       Long quantity,
       Long viewCount,
       Long salesCount,
-      Double popularityScore,
       LocalDateTime createdAt,
       LocalDateTime updatedAt) {}
 }

@@ -22,19 +22,17 @@ public class GetProductByIdUseCase {
   public Output execute(Input input) {
     Product product = productRepository.findByIdOrThrow(input.productId());
     product.increaseViewCount();
-    productRepository.save(product);
+    product = productService.saveProduct(product);
 
-    ProductService.ProductInfo productInfo = productService.getProduct(input.productId());
     return new Output(
-        productInfo.id(),
-        productInfo.name(),
-        productInfo.price(),
-        productInfo.quantity(),
-        productInfo.viewCount(),
-        productInfo.salesCount(),
-        productInfo.popularityScore(),
-        productInfo.createdAt(),
-        productInfo.updatedAt()
+        product.getId(),
+        product.getName(),
+        product.getPrice(),
+        product.getQuantity(),
+        product.getViewCount(),
+        product.getSalesCount(),
+        product.getCreatedAt(),
+        product.getUpdatedAt()
     );
   }
 
@@ -45,7 +43,6 @@ public class GetProductByIdUseCase {
       Long quantity,
       Long viewCount,
       Long salesCount,
-      Double popularityScore,
       LocalDateTime createdAt,
       LocalDateTime updatedAt) {}
 }

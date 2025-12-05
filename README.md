@@ -50,42 +50,59 @@ ecommerce/
 - **Docker** & **Docker Compose** (컨테이너 실행 시)
 - **MySQL 8.0** (로컬 실행 시)
 
-## 빠른 시작
+## 시작
 
-### 방법 1: Docker Compose (권장)
+### Docker Compose
 
 모든 서비스를 한 번에 실행합니다.
+
+#### macOS / Linux
 
 ```bash
 # 서비스 시작 (API 서버 3개 인스턴스)
 make up
 
-# 또는 직접 실행
-docker-compose up -d --scale api-server=3
+# 빌드와 함께 시작
+make up-build
+
+# 서비스 중지
+make down
 ```
 
-### 방법 2: 로컬 개발 환경
+#### Windows
 
 ```bash
-# 1. MySQL 실행 (Docker)
-docker-compose up -d mysql
+# 서비스 시작 (API 서버 3개 인스턴스)
+docker-compose up -d --scale api-server=3
 
-# 2. API 서버 빌드 및 실행
-cd api-server
-./gradlew bootRun
+# 빌드와 함께 시작
+docker-compose up -d --build --scale api-server=3
+
+# 서비스 중지
+docker-compose down
 ```
+
+> **Windows에서 make 사용하기**: Chocolatey로 설치 (`choco install make`) 또는 Git Bash 사용
 
 ## 빌드 및 실행
 
 ### 빌드
 
+#### macOS / Linux
 ```bash
 cd api-server
 ./gradlew build
 ```
 
+#### Windows
+```bash
+cd api-server
+gradlew.bat build
+```
+
 ### 테스트
 
+#### macOS / Linux
 ```bash
 # 전체 테스트 실행 (Docker 필요 - Testcontainers 사용)
 cd api-server
@@ -98,11 +115,31 @@ cd api-server
 ./gradlew test --tests "*Concurrency*"
 ```
 
+#### Windows
+```bash
+# 전체 테스트 실행 (Docker 필요 - Testcontainers 사용)
+cd api-server
+gradlew.bat test
+
+# 특정 테스트 클래스 실행
+gradlew.bat test --tests "CartIntegrationTest"
+
+# 특정 패턴의 테스트 실행
+gradlew.bat test --tests "*Concurrency*"
+```
+
 ### 애플리케이션 실행
 
+#### macOS / Linux
 ```bash
 cd api-server
 ./gradlew bootRun
+```
+
+#### Windows
+```bash
+cd api-server
+gradlew.bat bootRun
 ```
 
 ## API 접근
@@ -200,12 +237,20 @@ cd api-server
 
 ### 실행 방법
 
+#### macOS / Linux
 ```bash
 # MySQL이 실행 중인 상태에서
 make seed
 
 # 또는 직접 실행
 cd api-server && ./gradlew seedData
+```
+
+#### Windows
+```bash
+# MySQL이 실행 중인 상태에서
+cd api-server
+.\gradlew.bat seedData
 ```
 
 ### 생성되는 데이터
@@ -258,10 +303,21 @@ docker ps
 
 ### 포트 충돌
 
+#### macOS / Linux
 ```bash
 # 사용 중인 포트 확인
 lsof -i :8085
 lsof -i :3306
+
+# 기존 컨테이너 정리
+docker-compose down -v
+```
+
+#### Windows
+```bash
+# 사용 중인 포트 확인
+netstat -ano | findstr :8085
+netstat -ano | findstr :3306
 
 # 기존 컨테이너 정리
 docker-compose down -v

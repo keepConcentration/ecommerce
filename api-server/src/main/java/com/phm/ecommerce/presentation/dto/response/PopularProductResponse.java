@@ -24,9 +24,6 @@ public record PopularProductResponse(
     @Schema(description = "판매량", example = "342")
     Long salesCount,
 
-    @Schema(description = "인기도 점수 (조회수 가중치 * 조회수 + 판매량 가중치 * 판매량)", example = "695.9")
-    Double popularityScore,
-
     @Schema(description = "생성일시", example = "2025-01-15T10:00:00")
     LocalDateTime createdAt,
 

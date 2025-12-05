@@ -15,28 +15,30 @@ public class GetPopularProductsUseCase {
 
   private static final int DEFAULT_LIMIT = 5;
 
-  public List<Output> execute() {
-    return execute(DEFAULT_LIMIT);
+  public record Input(Integer limit) {
+    public Input {
+      if (limit == null) {
+        limit = DEFAULT_LIMIT;
+      }
+    }
   }
 
-  public List<Output> execute(int limit) {
-    ProductService.ProductIdList productIdList = productService.getPopularProductIds(limit);
+  public List<Output> execute(Input input) {
+    ProductService.ProductIdList productIdList = productService.getPopularProductIds(input.limit());
 
-    return productIdList.ids().stream()
-        .map(productId -> {
-          ProductService.ProductInfo product = productService.getProduct(productId);
-          return new Output(
-              product.id(),
-              product.name(),
-              product.price(),
-              product.quantity(),
-              product.viewCount(),
-              product.salesCount(),
-              product.popularityScore(),
-              product.createdAt(),
-              product.updatedAt()
-          );
-        })
+    List<ProductService.ProductInfo> products = productService.getProductsByIds(productIdList.ids());
+
+    return products.stream()
+        .map(product -> new Output(
+            product.id(),
+            product.name(),
+            product.price(),
+            product.quantity(),
+            product.viewCount(),
+            product.salesCount(),
+            product.createdAt(),
+            product.updatedAt()
+        ))
         .toList();
   }
 
@@ -47,7 +49,6 @@ public class GetPopularProductsUseCase {
       Long quantity,
       Long viewCount,
       Long salesCount,
-      Double popularityScore,
       LocalDateTime createdAt,
       LocalDateTime updatedAt
   ) {}
