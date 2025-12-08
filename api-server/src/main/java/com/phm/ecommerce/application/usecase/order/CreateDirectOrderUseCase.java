@@ -2,6 +2,7 @@ package com.phm.ecommerce.application.usecase.order;
 
 import com.phm.ecommerce.application.lock.MultiDistributedLock;
 import com.phm.ecommerce.application.lock.RedisLockKeys;
+import com.phm.ecommerce.application.service.ExternalOrderService;
 import com.phm.ecommerce.application.service.ProductService;
 import com.phm.ecommerce.domain.coupon.Coupon;
 import com.phm.ecommerce.domain.coupon.UserCoupon;
@@ -40,6 +41,7 @@ public class CreateDirectOrderUseCase {
   private final OrderRepository orderRepository;
   private final OrderItemRepository orderItemRepository;
   private final OrderPricingService orderPricingService;
+  private final ExternalOrderService externalOrderService;
 
   public record Input(Long userId, Long productId, Long quantity, Long userCouponId) {}
 
@@ -116,6 +118,12 @@ public class CreateDirectOrderUseCase {
             orderItem.getDiscountAmount(),
             orderItem.getFinalAmount(),
             orderItem.getUserCouponId());
+
+    externalOrderService.sendOrderToExternalSystem(
+        order.getId(),
+        order.getUserId(),
+        order.getFinalAmount(),
+        order.getCreatedAt());
 
     return new Output(
         order.getId(),

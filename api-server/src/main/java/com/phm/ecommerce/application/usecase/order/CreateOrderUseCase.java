@@ -2,6 +2,7 @@ package com.phm.ecommerce.application.usecase.order;
 
 import com.phm.ecommerce.application.lock.MultiDistributedLock;
 import com.phm.ecommerce.application.lock.RedisLockKeys;
+import com.phm.ecommerce.application.service.ExternalOrderService;
 import com.phm.ecommerce.application.service.ProductService;
 import com.phm.ecommerce.domain.cart.CartItem;
 import com.phm.ecommerce.domain.coupon.Coupon;
@@ -46,6 +47,7 @@ public class CreateOrderUseCase {
   private final OrderRepository orderRepository;
   private final OrderItemRepository orderItemRepository;
   private final OrderPricingService orderPricingService;
+  private final ExternalOrderService externalOrderService;
 
   public record Input(
       Long userId,
@@ -163,6 +165,12 @@ public class CreateOrderUseCase {
 
     log.info("주문 생성 완료 - orderId: {}, userId: {}, finalAmount: {}, orderItemCount: {}",
         order.getId(), order.getUserId(), order.getFinalAmount(), orderItemInfos.size());
+
+    externalOrderService.sendOrderToExternalSystem(
+        order.getId(),
+        order.getUserId(),
+        order.getFinalAmount(),
+        order.getCreatedAt());
 
     return new Output(
         order.getId(),
