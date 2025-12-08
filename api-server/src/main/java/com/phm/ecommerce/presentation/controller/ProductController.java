@@ -5,6 +5,7 @@ import com.phm.ecommerce.application.usecase.product.GetProductByIdUseCase;
 import com.phm.ecommerce.application.usecase.product.GetProductsUseCase;
 import com.phm.ecommerce.presentation.common.ApiResponse;
 import com.phm.ecommerce.presentation.controller.api.ProductApi;
+import com.phm.ecommerce.presentation.dto.request.PopularProductRequest;
 import com.phm.ecommerce.presentation.dto.response.PageResponse;
 import com.phm.ecommerce.presentation.dto.response.PopularProductResponse;
 import com.phm.ecommerce.presentation.dto.response.ProductResponse;
@@ -39,8 +40,9 @@ public class ProductController implements ProductApi {
   }
 
   @Override
-  public ApiResponse<List<PopularProductResponse>> getPopularProducts() {
-    List<GetPopularProductsUseCase.Output> outputs = getPopularProductsUseCase.execute();
+  public ApiResponse<List<PopularProductResponse>> getPopularProducts(PopularProductRequest request) {
+    List<GetPopularProductsUseCase.Output> outputs = getPopularProductsUseCase.execute(
+        productMapper.toInput(request));
     return ApiResponse.success(productMapper.toPopularProductResponses(outputs));
   }
 }

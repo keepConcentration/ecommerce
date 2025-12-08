@@ -1,10 +1,11 @@
 package com.phm.ecommerce.application.service;
 
 import com.phm.ecommerce.domain.product.Product;
+import com.phm.ecommerce.infrastructure.cache.ProductCacheService;
+import com.phm.ecommerce.infrastructure.cache.ProductRankingService;
 import com.phm.ecommerce.infrastructure.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -16,33 +17,54 @@ import java.util.List;
 public class ProductService {
 
   private final ProductRepository productRepository;
+  private final ProductRankingService productRankingService;
+  private final ProductCacheService productCacheService;
 
-  @Cacheable(value = "product", key = "#productId")
-  public ProductInfo getProduct(Long productId) {
-    log.info("DB에서 상품 조회: productId={}", productId);
-    Product product = productRepository.findByIdOrThrow(productId);
+  public List<ProductInfo> getProductsByIds(List<Long> productIds) {
+    log.info("상품 조회 요청: {} 개", productIds.size());
 
-    return new ProductInfo(
-        product.getId(),
-        product.getName(),
-        product.getPrice(),
-        product.getQuantity(),
-        product.getViewCount(),
-        product.getSalesCount(),
-        product.getPopularityScore(),
-        product.getCreatedAt(),
-        product.getUpdatedAt()
-    );
+    List<ProductCacheService.ProductInfo> cachedInfos = productCacheService.getProductsByIds(productIds);
+
+    return cachedInfos.stream()
+        .map(info -> new ProductInfo(
+            info.id(),
+            info.name(),
+            info.price(),
+            info.quantity(),
+            info.viewCount(),
+            info.salesCount(),
+            info.createdAt(),
+            info.updatedAt()
+        ))
+        .toList();
   }
 
-  @Cacheable(value = "popularProductIds", key = "'top' + #limit")
   public ProductIdList getPopularProductIds(int limit) {
-    log.info("DB에서 인기 상품 ID 조회: limit={}", limit);
-    List<Long> ids = productRepository.findPopularProducts(limit)
-        .stream()
-        .map(Product::getId)
-        .toList();
+    log.info("인기 상품 ID 조회 시작: limit={}", limit);
+
+    List<Long> ids = productRankingService.getTopProductIds(limit);
+
+    if (ids.isEmpty()) {
+      log.warn("Redis 랭킹 데이터 없음 - DB에서 직접 조회");
+      List<Product> products = productRepository.findPopularProducts(limit);
+      ids = products.stream()
+          .map(Product::getId)
+          .toList();
+      log.info("DB 직접 조회 완료: {} 개 상품 반환", ids.size());
+    }
+
     return new ProductIdList(ids);
+  }
+
+  public Product saveProduct(Product product) {
+    log.info("상품 저장: productId={}", product.getId());
+    Product saved = productRepository.save(product);
+
+    if (saved.getId() != null) {
+      productCacheService.evictProductCache(saved.getId());
+    }
+
+    return saved;
   }
 
   public record ProductIdList(List<Long> ids) {
@@ -55,7 +77,6 @@ public class ProductService {
       Long quantity,
       Long viewCount,
       Long salesCount,
-      Double popularityScore,
       LocalDateTime createdAt,
       LocalDateTime updatedAt
   ) {

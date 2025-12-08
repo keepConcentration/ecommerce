@@ -1,0 +1,45 @@
+# Multi-stage build for batch-server in multi-module project
+FROM eclipse-temurin:21-jdk-alpine AS builder
+
+WORKDIR /workspace
+
+# Copy gradle wrapper and root build files
+COPY gradlew .
+COPY gradle gradle
+COPY settings.gradle .
+
+# Copy all module build files (for dependency resolution)
+COPY common/build.gradle common/build.gradle
+COPY api-server/build.gradle api-server/build.gradle
+COPY batch-server/build.gradle batch-server/build.gradle
+
+# Fix line endings for gradlew (Windows compatibility) and download dependencies
+RUN apk add --no-cache dos2unix && \
+    dos2unix ./gradlew && \
+    chmod +x ./gradlew && \
+    ./gradlew dependencies --no-daemon && \
+    apk del dos2unix
+
+# Copy common module source
+COPY common/src common/src
+
+# Copy batch-server module source
+COPY batch-server/src batch-server/src
+
+# Build batch-server (this will also build common as a dependency)
+RUN ./gradlew :batch-server:bootJar --no-daemon
+
+# Runtime stage
+FROM eclipse-temurin:21-jre-alpine
+
+WORKDIR /app
+
+# Copy built jar from builder stage
+COPY --from=builder /workspace/batch-server/build/libs/*.jar app.jar
+
+# Batch server doesn't need HTTP health check (no endpoints)
+# But add basic process check
+HEALTHCHECK --interval=60s --timeout=3s --start-period=30s --retries=3 \
+    CMD ps aux | grep '[j]ava' || exit 1
+
+ENTRYPOINT ["java", "-jar", "app.jar"]

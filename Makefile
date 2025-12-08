@@ -43,11 +43,21 @@ logs-mysql:
 
 # Run tests (local)
 test:
-	cd api-server && ./gradlew test
+	./gradlew test
+
+# Test specific module
+test-api:
+	./gradlew :api-server:test
+
+test-batch:
+	./gradlew :batch-server:test
+
+test-common:
+	./gradlew :common:test
 
 # Clean build artifacts
 clean:
-	cd api-server && ./gradlew clean
+	./gradlew clean
 	docker-compose down -v --rmi local
 
 # Restart services
@@ -65,7 +75,7 @@ health:
 
 # Seed test data
 seed:
-	cd api-server && ./gradlew seedData
+	./gradlew :api-server:seedData
 
 # Reset MySQL data (delete all data)
 reset-db:

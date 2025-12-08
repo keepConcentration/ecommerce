@@ -1,0 +1,7 @@
+spring:
+  application:
+    name: common
+
+coupon:
+  issue:
+    max-retry-count: 3

@@ -1,6 +1,7 @@
 package com.phm.ecommerce.presentation.controller.api;
 
 import com.phm.ecommerce.presentation.common.ApiResponse;
+import com.phm.ecommerce.presentation.dto.request.PopularProductRequest;
 import com.phm.ecommerce.presentation.dto.response.PageResponse;
 import com.phm.ecommerce.presentation.dto.response.PopularProductResponse;
 import com.phm.ecommerce.presentation.dto.response.ProductResponse;
@@ -58,7 +59,7 @@ public interface ProductApi {
   @GetMapping("/popular")
   @Operation(
       summary = "인기 상품 조회",
-      description = "조회수와 판매량에 가중치를 적용한 인기 상품 목록을 조회합니다. ")
+      description = "조회수와 판매량에 가중치를 적용한 인기 상품 목록을 조회합니다.")
   @ApiResponses(
       value = {
         @io.swagger.v3.oas.annotations.responses.ApiResponse(
@@ -66,5 +67,5 @@ public interface ProductApi {
             description = "성공",
             content = @Content(schema = @Schema(implementation = ApiResponse.class)))
       })
-  ApiResponse<List<PopularProductResponse>> getPopularProducts();
+  ApiResponse<List<PopularProductResponse>> getPopularProducts(PopularProductRequest request);
 }

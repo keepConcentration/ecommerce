@@ -5,6 +5,7 @@ import com.phm.ecommerce.domain.cart.CartItem;
 import com.phm.ecommerce.domain.point.Point;
 import com.phm.ecommerce.domain.product.Product;
 import com.phm.ecommerce.domain.user.User;
+import com.phm.ecommerce.infrastructure.cache.RedisCacheKeys;
 import com.phm.ecommerce.infrastructure.repository.CartItemRepository;
 import com.phm.ecommerce.infrastructure.repository.PointRepository;
 import com.phm.ecommerce.infrastructure.repository.ProductRepository;
@@ -18,7 +19,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cache.CacheManager;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
@@ -55,7 +56,7 @@ class PopularProductIntegrationTest extends TestContainerSupport {
   private CartItemRepository cartItemRepository;
 
   @Autowired
-  private CacheManager cacheManager;
+  private RedisTemplate<String, Object> redisTemplate;
 
   private User user;
   private Product product1;
@@ -64,6 +65,9 @@ class PopularProductIntegrationTest extends TestContainerSupport {
 
   @BeforeEach
   void setUp() {
+    // Redis 랭킹 데이터 초기화
+    redisTemplate.delete(RedisCacheKeys.PRODUCT_RANKING);
+
     // 사용자 생성
     user = User.create();
     user = userRepository.save(user);
@@ -110,8 +114,9 @@ class PopularProductIntegrationTest extends TestContainerSupport {
     createOrder(user.getId(), product2.getId(), 30L);
     createOrder(user.getId(), product3.getId(), 100L);
 
-    cacheManager.getCache("popularProductIds").clear();
-    cacheManager.getCache("product").clear();
+    redisTemplate.delete(RedisCacheKeys.productCache(product1.getId()));
+    redisTemplate.delete(RedisCacheKeys.productCache(product2.getId()));
+    redisTemplate.delete(RedisCacheKeys.productCache(product3.getId()));
 
     // when & then
     mockMvc
@@ -122,15 +127,12 @@ class PopularProductIntegrationTest extends TestContainerSupport {
         .andExpect(jsonPath("$.data[0].productId").value(product3.getId()))
         .andExpect(jsonPath("$.data[0].viewCount").value(50))
         .andExpect(jsonPath("$.data[0].salesCount").value(100))
-        .andExpect(jsonPath("$.data[0].popularityScore").value(95.0))
         .andExpect(jsonPath("$.data[1].productId").value(product1.getId()))
         .andExpect(jsonPath("$.data[1].viewCount").value(100))
         .andExpect(jsonPath("$.data[1].salesCount").value(50))
-        .andExpect(jsonPath("$.data[1].popularityScore").value(55.0))
         .andExpect(jsonPath("$.data[2].productId").value(product2.getId()))
         .andExpect(jsonPath("$.data[2].viewCount").value(200))
-        .andExpect(jsonPath("$.data[2].salesCount").value(30))
-        .andExpect(jsonPath("$.data[2].popularityScore").value(47.0));
+        .andExpect(jsonPath("$.data[2].salesCount").value(30));
   }
 
   @Test
@@ -142,8 +144,7 @@ class PopularProductIntegrationTest extends TestContainerSupport {
     }
     productRepository.save(product1);
 
-    cacheManager.getCache("popularProductIds").clear();
-    cacheManager.getCache("product").clear();
+    redisTemplate.delete(RedisCacheKeys.productCache(product1.getId()));
 
     // when & then
     mockMvc.perform(get("/api/v1/products/popular"))
