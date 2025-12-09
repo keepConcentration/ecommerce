@@ -2,7 +2,6 @@ package com.phm.ecommerce.application.usecase.order;
 
 import com.phm.ecommerce.application.lock.MultiDistributedLock;
 import com.phm.ecommerce.application.lock.RedisLockKeys;
-import com.phm.ecommerce.application.service.ExternalOrderService;
 import com.phm.ecommerce.application.service.ProductService;
 import com.phm.ecommerce.domain.cart.CartItem;
 import com.phm.ecommerce.domain.coupon.Coupon;
@@ -10,10 +9,12 @@ import com.phm.ecommerce.domain.coupon.UserCoupon;
 import com.phm.ecommerce.domain.order.Order;
 import com.phm.ecommerce.domain.order.OrderItem;
 import com.phm.ecommerce.domain.order.OrderPricingService;
+import com.phm.ecommerce.domain.order.event.OrderCreatedEvent;
 import com.phm.ecommerce.domain.order.exception.EmptyCartException;
 import com.phm.ecommerce.domain.point.Point;
 import com.phm.ecommerce.domain.point.PointTransaction;
 import com.phm.ecommerce.domain.product.Product;
+import com.phm.ecommerce.infrastructure.event.publisher.EventPublisher;
 import com.phm.ecommerce.infrastructure.repository.CartItemRepository;
 import com.phm.ecommerce.infrastructure.repository.CouponRepository;
 import com.phm.ecommerce.infrastructure.repository.OrderItemRepository;
@@ -47,7 +48,7 @@ public class CreateOrderUseCase {
   private final OrderRepository orderRepository;
   private final OrderItemRepository orderItemRepository;
   private final OrderPricingService orderPricingService;
-  private final ExternalOrderService externalOrderService;
+  private final EventPublisher eventPublisher;
 
   public record Input(
       Long userId,
@@ -166,11 +167,12 @@ public class CreateOrderUseCase {
     log.info("주문 생성 완료 - orderId: {}, userId: {}, finalAmount: {}, orderItemCount: {}",
         order.getId(), order.getUserId(), order.getFinalAmount(), orderItemInfos.size());
 
-    externalOrderService.sendOrderToExternalSystem(
+    eventPublisher.publish(new OrderCreatedEvent(
         order.getId(),
         order.getUserId(),
         order.getFinalAmount(),
-        order.getCreatedAt());
+        order.getCreatedAt()
+    ));
 
     return new Output(
         order.getId(),
