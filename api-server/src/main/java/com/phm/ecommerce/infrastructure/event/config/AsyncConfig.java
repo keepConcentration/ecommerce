@@ -34,7 +34,6 @@ public class AsyncConfig implements AsyncConfigurer {
 
   @Override
   public AsyncUncaughtExceptionHandler getAsyncUncaughtExceptionHandler() {
-    // TODO 실패 이벤트 DLQ에 저장
     return (ex, method, params) -> {
       log.error("비동기 이벤트 처리 예외 - method: {}, params: {}, error: {}",
           method.getName(), params, ex.getMessage(), ex);
