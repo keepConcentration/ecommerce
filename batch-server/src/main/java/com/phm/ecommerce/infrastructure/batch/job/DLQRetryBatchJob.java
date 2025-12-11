@@ -1,4 +1,4 @@
-package com.phm.ecommerce.infrastructure.scheduler;
+package com.phm.ecommerce.infrastructure.batch.job;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -8,26 +8,58 @@ import com.phm.ecommerce.application.service.ExternalOrderService;
 import com.phm.ecommerce.domain.order.event.OrderCreatedEvent;
 import com.phm.ecommerce.infrastructure.dlq.DeadLetterMessage;
 import com.phm.ecommerce.infrastructure.dlq.RedisDLQService;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
+import org.springframework.batch.core.Job;
+import org.springframework.batch.core.Step;
+import org.springframework.batch.core.job.builder.JobBuilder;
+import org.springframework.batch.core.repository.JobRepository;
+import org.springframework.batch.core.step.builder.StepBuilder;
+import org.springframework.batch.core.step.tasklet.Tasklet;
+import org.springframework.batch.repeat.RepeatStatus;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.transaction.PlatformTransactionManager;
+
+import java.util.List;
 
 @Slf4j
-@Component
+@Configuration
 @RequiredArgsConstructor
-public class DLQRetryScheduler {
+public class DLQRetryBatchJob {
 
   private final RedisDLQService dlqService;
   private final ExternalOrderService externalOrderService;
   private final ObjectMapper redisObjectMapper;
+  private final JobRepository jobRepository;
+  private final PlatformTransactionManager transactionManager;
 
-  @Scheduled(fixedDelay = 60000, initialDelay = 30000)
+  @Bean
+  public Job dlqRetryJob() {
+    return new JobBuilder("dlqRetryJob", jobRepository)
+        .start(dlqRetryStep())
+        .build();
+  }
+
+  @Bean
+  public Step dlqRetryStep() {
+    return new StepBuilder("dlqRetryStep", jobRepository)
+        .tasklet(dlqRetryTasklet(), transactionManager)
+        .build();
+  }
+
+  @Bean
+  public Tasklet dlqRetryTasklet() {
+    return (contribution, chunkContext) -> {
+      retryFailedMessages();
+      return RepeatStatus.FINISHED;
+    };
+  }
+
   @DistributedLock(lockKeyProvider = "prepareLockKey", waitTime = 10L, leaseTime = 60L)
   public void retryFailedMessages() {
     try {
-      log.debug("DLQ 재시도 스케줄러 시작");
+      log.debug("DLQ 재시도 배치 시작");
 
       // 재시도 가능 메시지 목록 조회
       List<DeadLetterMessage> retryableMessages = dlqService.getRetryableMessages();
@@ -84,7 +116,8 @@ public class DLQRetryScheduler {
           successCount, failureCount, exceededCount, retryableMessages.size());
 
     } catch (Exception e) {
-      log.error("DLQ 재시도 스케줄러 실행 실패", e);
+      log.error("DLQ 재시도 배치 실행 실패", e);
+      throw e;
     }
   }
 

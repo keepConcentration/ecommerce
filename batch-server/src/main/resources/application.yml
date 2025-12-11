@@ -30,6 +30,12 @@ spring:
         order_inserts: true
         order_updates: true
 
+  batch:
+    jdbc:
+      initialize-schema: always
+    job:
+      enabled: false
+
   data:
     redis:
       host: localhost
