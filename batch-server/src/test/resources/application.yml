@@ -8,7 +8,32 @@ spring:
       hibernate:
         format_sql: true
         show_sql: false
+  sql:
+    init:
+      mode: always
+      continue-on-error: false
+      schema-locations: classpath:schema.sql
+
+  batch:
+    jdbc:
+      initialize-schema: never
+    job:
+      enabled: false
+
+  quartz:
+    job-store-type: memory
 
 logging:
   level:
     com.phm.ecommerce: DEBUG
+    org.springframework.batch: INFO
+    org.quartz: INFO
+
+coupon:
+  issue:
+    max-retry-count: 3
+
+dlq:
+  retry-interval-minutes: 0
+  backoff-multiplier: 1.0
+  max-retry-count: 3

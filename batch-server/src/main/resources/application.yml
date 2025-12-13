@@ -30,6 +30,29 @@ spring:
         order_inserts: true
         order_updates: true
 
+  batch:
+    jdbc:
+      initialize-schema: always
+    job:
+      enabled: false
+
+  quartz:
+    job-store-type: jdbc
+    jdbc:
+      initialize-schema: always
+    properties:
+      org:
+        quartz:
+          scheduler:
+            instanceName: EcommerceBatchScheduler
+            instanceId: AUTO
+          jobStore:
+            tablePrefix: QRTZ_
+            isClustered: true
+            clusterCheckinInterval: 10000
+          threadPool:
+            threadCount: 10
+
   data:
     redis:
       host: localhost
@@ -47,6 +70,7 @@ logging:
     root: INFO
     com.phm.ecommerce: INFO
     org.springframework.scheduling: DEBUG
+    org.quartz: INFO
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
   pattern:
@@ -55,3 +79,8 @@ logging:
 coupon:
   issue:
     max-retry-count: 3
+
+dlq:
+  retry-interval-minutes: 5
+  backoff-multiplier: 2.0
+  max-retry-count: 3

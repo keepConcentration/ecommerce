@@ -5,3 +5,8 @@ spring:
 coupon:
   issue:
     max-retry-count: 3
+
+dlq:
+  max-retry-count: 5
+  retry-interval-minutes: 1
+  backoff-multiplier: 2

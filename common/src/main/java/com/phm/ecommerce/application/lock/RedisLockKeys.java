@@ -21,4 +21,8 @@ public final class RedisLockKeys {
   public static String rankingUpdate() {
     return "ranking:update";
   }
+
+  public static String dlqRetry() {
+    return "dlq:retry";
+  }
 }
