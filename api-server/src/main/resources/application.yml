@@ -33,3 +33,10 @@ springdoc:
     tags-sorter: alpha
   default-consumes-media-type: application/json
   default-produces-media-type: application/json
+
+async:
+  executor:
+    core-pool-size: 5
+    max-pool-size: 10
+    queue-capacity: 100
+    thread-name-prefix: event-async-
