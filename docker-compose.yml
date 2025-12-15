@@ -38,6 +38,103 @@ services:
       timeout: 5s
       retries: 5
 
+  # Kafka common configuration template
+  x-kafka-common: &kafka-common
+    image: apache/kafka:3.8.1
+    networks:
+      - ecommerce-network
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-broker-api-versions.sh --bootstrap-server localhost:9092 || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    environment: &kafka-common-env
+      # KRaft settings
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka-1:9094,2@kafka-2:9094,3@kafka-3:9094
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+
+      # Cluster settings (multi-broker)
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 3 # 토픽 파티션의 복제 개수
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 3 # EOS 사용 시
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 2 # 트랜잭션 로그 write 시 필요한 최소 ISR 수
+      KAFKA_MIN_INSYNC_REPLICAS: 2 # write 성공을 위해 필요한 최소 ISR 수
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 3 # 토픽 생성 시 기본 복제 개수 (브로커 수보다 적어야 함)
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 3000 # 초기 리밸런싱할때 컨슈머들이 컨슈머 그룹에 조인할때 대기 시간
+      KAFKA_NUM_PARTITIONS: 9 # 새 토픽 생성 시 기본 파티션 수. 늘릴 수는 있지만 줄일 수 없다
+
+      # EOS (Exactly-Once Semantics) settings
+      KAFKA_TRANSACTION_MAX_TIMEOUT_MS: 900000 # 트랜잭션 최대 타임아웃 (15분)
+      KAFKA_ENABLE_IDEMPOTENCE: "true" # 멱등성 활성화 (중복 방지)
+
+      # Log settings
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
+
+  # Kafka Broker 1
+  kafka-1:
+    <<: *kafka-common
+    container_name: ecommerce-kafka-1
+    ports:
+      - "9093:9093"
+    environment:
+      <<: *kafka-common-env
+      KAFKA_NODE_ID: 1
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9094,PLAINTEXT_HOST://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-1:9092,PLAINTEXT_HOST://localhost:9093
+    volumes:
+      - kafka-1-data:/var/lib/kafka/data
+
+  # Kafka Broker 2
+  kafka-2:
+    <<: *kafka-common
+    container_name: ecommerce-kafka-2
+    ports:
+      - "9094:9093"
+    environment:
+      <<: *kafka-common-env
+      KAFKA_NODE_ID: 2
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9094,PLAINTEXT_HOST://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-2:9092,PLAINTEXT_HOST://localhost:9094
+    volumes:
+      - kafka-2-data:/var/lib/kafka/data
+
+  # Kafka Broker 3
+  kafka-3:
+    <<: *kafka-common
+    container_name: ecommerce-kafka-3
+    ports:
+      - "9095:9093"
+    environment:
+      <<: *kafka-common-env
+      KAFKA_NODE_ID: 3
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9094,PLAINTEXT_HOST://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-3:9092,PLAINTEXT_HOST://localhost:9095
+    volumes:
+      - kafka-3-data:/var/lib/kafka/data
+
+  # Kafka UI (for monitoring and management)
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: ecommerce-kafka-ui
+    ports:
+      - "8090:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: ecommerce-cluster
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka-1:9092,kafka-2:9092,kafka-3:9092
+      DYNAMIC_CONFIG_ENABLED: "true"
+    depends_on:
+      kafka-1:
+        condition: service_healthy
+      kafka-2:
+        condition: service_healthy
+      kafka-3:
+        condition: service_healthy
+    networks:
+      - ecommerce-network
+
   # API Server (scalable)
   api-server:
     build:
@@ -100,3 +197,6 @@ networks:
 volumes:
   mysql-data:
   redis-data:
+  kafka-1-data:
+  kafka-2-data:
+  kafka-3-data:
