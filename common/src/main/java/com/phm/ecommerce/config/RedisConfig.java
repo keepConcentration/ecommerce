@@ -6,12 +6,10 @@ import com.fasterxml.jackson.databind.ObjectMapper.DefaultTyping;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.jsontype.impl.StdTypeResolverBuilder;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.phm.ecommerce.infrastructure.dlq.DLQProperties;
 import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;
 import org.redisson.config.Config;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -23,33 +21,33 @@ import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSeriali
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 @Configuration
-@EnableConfigurationProperties(DLQProperties.class)
+@EnableConfigurationProperties(RedissonProperties.class)
 public class RedisConfig {
 
-  @Value("${spring.data.redis.host:localhost}")
-  private String redisHost;
+  private final RedissonProperties redissonProperties;
 
-  @Value("${spring.data.redis.port:6379}")
-  private int redisPort;
+  public RedisConfig(RedissonProperties redissonProperties) {
+    this.redissonProperties = redissonProperties;
+  }
 
   @Bean
   public RedissonClient redissonClient() {
     Config config = new Config();
     config.useSingleServer()
-        .setAddress("redis://" + redisHost + ":" + redisPort)
-        .setConnectionPoolSize(50)
-        .setConnectionMinimumIdleSize(10)
-        .setIdleConnectionTimeout(10000)
-        .setConnectTimeout(3000)
-        .setTimeout(3000);
+        .setAddress("redis://" + redissonProperties.getHost() + ":" + redissonProperties.getPort())
+        .setConnectionPoolSize(redissonProperties.getConnectionPoolSize())
+        .setConnectionMinimumIdleSize(redissonProperties.getConnectionMinimumIdleSize())
+        .setIdleConnectionTimeout(redissonProperties.getIdleConnectionTimeout())
+        .setConnectTimeout(redissonProperties.getConnectTimeout())
+        .setTimeout(redissonProperties.getTimeout());
     return Redisson.create(config);
   }
 
   @Bean
   public RedisConnectionFactory redisConnectionFactory() {
     RedisStandaloneConfiguration config = new RedisStandaloneConfiguration();
-    config.setHostName(redisHost);
-    config.setPort(redisPort);
+    config.setHostName(redissonProperties.getHost());
+    config.setPort(redissonProperties.getPort());
     return new LettuceConnectionFactory(config);
   }
 

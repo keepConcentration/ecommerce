@@ -10,3 +10,12 @@ dlq:
   max-retry-count: 5
   retry-interval-minutes: 1
   backoff-multiplier: 2
+
+redisson:
+  host: localhost
+  port: 6379
+  connection-pool-size: 50
+  connection-minimum-idle-size: 10
+  idle-connection-timeout: 10000
+  connect-timeout: 3000
+  timeout: 3000

@@ -15,6 +15,10 @@ spring:
       host: ${SPRING_DATA_REDIS_HOST:redis}
       port: ${SPRING_DATA_REDIS_PORT:6379}
 
+redisson:
+  host: ${SPRING_DATA_REDIS_HOST:redis}
+  port: ${SPRING_DATA_REDIS_PORT:6379}
+
 logging:
   level:
     root: INFO
