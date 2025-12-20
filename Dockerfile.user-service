@@ -1,0 +1,31 @@
+# Build stage
+FROM gradle:8.12-jdk21-alpine AS builder
+WORKDIR /app
+
+# Copy Gradle files
+COPY build.gradle settings.gradle ./
+COPY common/build.gradle ./common/
+COPY user-service/build.gradle ./user-service/
+
+# Download dependencies
+RUN gradle :user-service:dependencies --no-daemon || true
+
+# Copy source code
+COPY common/src ./common/src
+COPY user-service/src ./user-service/src
+
+# Build application
+RUN gradle :user-service:bootJar --no-daemon
+
+# Runtime stage
+FROM eclipse-temurin:21-jre-alpine
+WORKDIR /app
+
+# Copy built jar
+COPY --from=builder /app/user-service/build/libs/*.jar app.jar
+
+# Expose user service port
+EXPOSE 8082
+
+# Run application
+ENTRYPOINT ["java", "-jar", "app.jar"]

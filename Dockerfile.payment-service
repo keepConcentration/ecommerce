@@ -1,0 +1,31 @@
+# Build stage
+FROM gradle:8.12-jdk21-alpine AS builder
+WORKDIR /app
+
+# Copy Gradle files
+COPY build.gradle settings.gradle ./
+COPY common/build.gradle ./common/
+COPY payment-service/build.gradle ./payment-service/
+
+# Download dependencies
+RUN gradle :payment-service:dependencies --no-daemon || true
+
+# Copy source code
+COPY common/src ./common/src
+COPY payment-service/src ./payment-service/src
+
+# Build application
+RUN gradle :payment-service:bootJar --no-daemon
+
+# Runtime stage
+FROM eclipse-temurin:21-jre-alpine
+WORKDIR /app
+
+# Copy built jar
+COPY --from=builder /app/payment-service/build/libs/*.jar app.jar
+
+# Expose payment service port
+EXPOSE 8083
+
+# Run application
+ENTRYPOINT ["java", "-jar", "app.jar"]

@@ -1,0 +1,31 @@
+# Build stage
+FROM gradle:8.12-jdk21-alpine AS builder
+WORKDIR /app
+
+# Copy Gradle files
+COPY build.gradle settings.gradle ./
+COPY common/build.gradle ./common/
+COPY order-service/build.gradle ./order-service/
+
+# Download dependencies
+RUN gradle :order-service:dependencies --no-daemon || true
+
+# Copy source code
+COPY common/src ./common/src
+COPY order-service/src ./order-service/src
+
+# Build application
+RUN gradle :order-service:bootJar --no-daemon
+
+# Runtime stage
+FROM eclipse-temurin:21-jre-alpine
+WORKDIR /app
+
+# Copy built jar
+COPY --from=builder /app/order-service/build/libs/*.jar app.jar
+
+# Expose order service port
+EXPOSE 8086
+
+# Run application
+ENTRYPOINT ["java", "-jar", "app.jar"]

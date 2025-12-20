@@ -1,21 +1,21 @@
 services:
-  # MySQL Database
-  mysql:
+  # Shared MySQL DB (통합 DB - 모든 서비스가 공유)
+  mysql-db:
     image: mysql:8.0
-    container_name: ecommerce-mysql
+    container_name: ecommerce-mysql-db
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
-      MYSQL_DATABASE: ${MYSQL_DATABASE:-ecommerce}
+      MYSQL_DATABASE: ecommerce_db
       MYSQL_USER: ${MYSQL_USER:-sa}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD:-sa}
     ports:
       - "3306:3306"
     volumes:
-      - mysql-data:/var/lib/mysql
+      - mysql-db-data:/var/lib/mysql
     networks:
       - ecommerce-network
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-root}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -44,11 +44,11 @@ services:
     networks:
       - ecommerce-network
     healthcheck:
-      test: ["CMD-SHELL", "kafka-broker-api-versions.sh --bootstrap-server localhost:9092 || exit 1"]
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092 || exit 1"]
       interval: 10s
       timeout: 10s
-      retries: 5
-      start_period: 30s
+      retries: 10
+      start_period: 40s
     environment: &kafka-common-env
       # KRaft settings
       KAFKA_PROCESS_ROLES: broker,controller
@@ -64,7 +64,7 @@ services:
       KAFKA_MIN_INSYNC_REPLICAS: 2 # write 성공을 위해 필요한 최소 ISR 수
       KAFKA_DEFAULT_REPLICATION_FACTOR: 3 # 토픽 생성 시 기본 복제 개수 (브로커 수보다 적어야 함)
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 3000 # 초기 리밸런싱할때 컨슈머들이 컨슈머 그룹에 조인할때 대기 시간
-      KAFKA_NUM_PARTITIONS: 9 # 새 토픽 생성 시 기본 파티션 수. 늘릴 수는 있지만 줄일 수 없다
+      KAFKA_NUM_PARTITIONS: 3 # 새 토픽 생성 시 기본 파티션 수. 늘릴 수는 있지만 줄일 수 없다
 
       # EOS (Exactly-Once Semantics) settings
       KAFKA_TRANSACTION_MAX_TIMEOUT_MS: 900000 # 트랜잭션 최대 타임아웃 (15분)
@@ -135,58 +135,117 @@ services:
     networks:
       - ecommerce-network
 
-  # API Server (scalable)
-  api-server:
+  # Product Service
+  product-service:
     build:
       context: .
-      dockerfile: Dockerfile.api-server
-    environment:
-      - SPRING_PROFILES_ACTIVE=docker
-      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/ecommerce?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul
-      - SPRING_DATASOURCE_USERNAME=${MYSQL_USER:-sa}
-      - SPRING_DATASOURCE_PASSWORD=${MYSQL_PASSWORD:-sa}
-      - SPRING_DATA_REDIS_HOST=redis
-      - SPRING_DATA_REDIS_PORT=6379
-      - SERVER_PORT=8080
-    depends_on:
-      mysql:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    networks:
-      - ecommerce-network
-
-  # Batch Server (single instance)
-  batch-server:
-    build:
-      context: .
-      dockerfile: Dockerfile.batch-server
-    container_name: ecommerce-batch-server
-    environment:
-      - SPRING_PROFILES_ACTIVE=docker
-      - SPRING_DATASOURCE_URL=jdbc:mysql://mysql:3306/ecommerce?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul
-      - SPRING_DATASOURCE_USERNAME=${MYSQL_USER:-sa}
-      - SPRING_DATASOURCE_PASSWORD=${MYSQL_PASSWORD:-sa}
-      - SPRING_DATA_REDIS_HOST=redis
-      - SPRING_DATA_REDIS_PORT=6379
-    depends_on:
-      mysql:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    networks:
-      - ecommerce-network
-
-  # Nginx Load Balancer
-  nginx:
-    build:
-      context: ./nginx
-      dockerfile: Dockerfile
-    container_name: ecommerce-nginx
+      dockerfile: Dockerfile.product-service
+    container_name: ecommerce-product-service
     ports:
-      - "8085:80"
+      - "8081:8081"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
     depends_on:
-      - api-server
+      mysql-db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka-1:
+        condition: service_healthy
+      kafka-2:
+        condition: service_healthy
+      kafka-3:
+        condition: service_healthy
+    networks:
+      - ecommerce-network
+
+  # User Service
+  user-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.user-service
+    container_name: ecommerce-user-service
+    ports:
+      - "8082:8082"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      mysql-db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - ecommerce-network
+
+  # Order Service
+  order-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.order-service
+    container_name: ecommerce-order-service
+    ports:
+      - "8086:8086"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      mysql-db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka-1:
+        condition: service_healthy
+      kafka-2:
+        condition: service_healthy
+      kafka-3:
+        condition: service_healthy
+    networks:
+      - ecommerce-network
+
+  # Payment Service
+  payment-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.payment-service
+    container_name: ecommerce-payment-service
+    ports:
+      - "8083:8083"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      mysql-db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka-1:
+        condition: service_healthy
+      kafka-2:
+        condition: service_healthy
+      kafka-3:
+        condition: service_healthy
+    networks:
+      - ecommerce-network
+
+  # Promotion Service
+  promotion-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.promotion-service
+    container_name: ecommerce-promotion-service
+    ports:
+      - "8084:8084"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      mysql-db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      kafka-1:
+        condition: service_healthy
+      kafka-2:
+        condition: service_healthy
+      kafka-3:
+        condition: service_healthy
     networks:
       - ecommerce-network
 
@@ -195,7 +254,7 @@ networks:
     driver: bridge
 
 volumes:
-  mysql-data:
+  mysql-db-data:
   redis-data:
   kafka-1-data:
   kafka-2-data:

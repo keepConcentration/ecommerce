@@ -37,13 +37,29 @@ dependencyManagement {
 }
 
 dependencies {
+	// JPA 관련 (BaseEntity에 필요)
 	api 'org.springframework.boot:spring-boot-starter-data-jpa'
+
+	// Spring Web (ErrorCode의 HttpStatus에 필요)
+	api 'org.springframework:spring-web'
+
+	// Redis & Redisson (분산 락에 필요)
 	api 'org.springframework.boot:spring-boot-starter-data-redis'
 	api 'org.redisson:redisson-spring-boot-starter:3.24.3'
-	api 'org.springframework:spring-web'
+
+	// AOP (분산 락 Aspect에 필요)
+	api 'org.springframework.boot:spring-boot-starter-aop'
+
+	// Jackson (Redis 직렬화에 필요)
 	api 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+
+	// Kafka (이벤트 발행/구독)
+	api 'org.springframework.kafka:spring-kafka'
+
+	// Lombok
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
 
+	// Test
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }

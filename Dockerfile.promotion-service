@@ -1,0 +1,31 @@
+# Build stage
+FROM gradle:8.12-jdk21-alpine AS builder
+WORKDIR /app
+
+# Copy Gradle files
+COPY build.gradle settings.gradle ./
+COPY common/build.gradle ./common/
+COPY promotion-service/build.gradle ./promotion-service/
+
+# Download dependencies
+RUN gradle :promotion-service:dependencies --no-daemon || true
+
+# Copy source code
+COPY common/src ./common/src
+COPY promotion-service/src ./promotion-service/src
+
+# Build application
+RUN gradle :promotion-service:bootJar --no-daemon
+
+# Runtime stage
+FROM eclipse-temurin:21-jre-alpine
+WORKDIR /app
+
+# Copy built jar
+COPY --from=builder /app/promotion-service/build/libs/*.jar app.jar
+
+# Expose promotion service port
+EXPOSE 8084
+
+# Run application
+ENTRYPOINT ["java", "-jar", "app.jar"]
